@@ -13,6 +13,11 @@ Markers come in two drawings (`trmnl/assets/icons/`, built into the template by 
   activity recorded in the last 90 days. GVP keeps an eruption "continuing" until three months pass without
   activity, and its database can lag, so the recency check stops a stalled list from keeping plumes on screen.
   If the list can't be fetched, every marker falls back to the lava cone, so a volcano is never shown as erupting by mistake.
+  Because GVP's eruption database hasn't been updated since March 2026 and its weekly report blocks automated
+  access, there is also a hand-maintained list: [`eruptions.txt`](eruptions.txt). Once a week, paste the volcano
+  names from the [Weekly Volcanic Activity Report](https://volcano.si.edu/reports_weekly.cfm) and commit; the map
+  republishes. A volcano on the list also gets the plume. The list is ignored once its last commit is more than
+  14 days old, and names that don't match the catalogue are listed in the Publish maps log.
 
 The eruption drawing is also the recipe icon.
 

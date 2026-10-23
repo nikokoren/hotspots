@@ -24,6 +24,7 @@
 | FIRMS (optional) | Area API `…/api/area/csv/{MAP_KEY}/VIIRS_SNPP_NRT/world/{days}` | `FIRMS_MAP_KEY` repo secret, used only if set |
 | GVP catalogue | WFS `GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes`, GeoJSON | none |
 | GVP eruptions | WFS `GVP-VOTW:E3WebApp_Eruptions1960`, `ContinuingEruption = True` and `EndDate` (latest recorded activity) within 90 days. If it fails, all markers fall back to the lava icon | none |
+| Manual eruptions | `eruptions.txt` in the repo, pasted weekly from the GVP/USGS weekly report (volcano.si.edu blocks automated access). Used while its last commit is ≤ 14 days old | none |
 | World map | Generated from Natural Earth 50m land (public domain) by `scripts/build_world_map.py`, embedded | none |
 | Close-up map | TRMNL framework map: `trmnl.com/js/maplibre-gl/5.24.0`, tiles from TRMNL (`tiles: "trmnl"`) | none |
 
@@ -91,7 +92,7 @@ These include the known long-running eruptions (Kilauea, Sangay, Ibu, Lewotolok,
 
 ## Known limitations
 
-- **GVP eruption list looks stalled.** On 2026-10-23 all 38 continuing eruptions had their latest recorded activity between 23 Feb and 31 Mar 2026, and volcano.si.edu returned "temporarily unavailable". With the 90-day recency rule no marker currently shows the plume; plumes return automatically once GVP updates.
+- **GVP eruption list looks stalled.** On 2026-10-23 all 38 continuing eruptions had their latest recorded activity between 23 Feb and 31 Mar 2026, and volcano.si.edu returned "temporarily unavailable". With the 90-day recency rule no marker currently shows the plume; plumes return automatically once GVP updates. Until then the hand-maintained `eruptions.txt` is the only source of plumes.
 
 - **Eruption-history prior.** A volcano reawakening after more than 10 years quiet is hidden until GVP updates its last-eruption year (the catalogue refreshes monthly). This is the main trade-off for suppressing fires.
 - **Fires on active volcanoes** (for example Tengger's caldera grassland) can still pass.

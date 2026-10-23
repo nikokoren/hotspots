@@ -25,7 +25,7 @@ from hotspots.processing.scoring import aggregate
 from hotspots.processing.visual import build_markers, qualify
 from hotspots.render.layout import marker_list, view_markers
 from hotspots.render.views import DEFAULT_VIEW, VIEWS, world_shift_pct
-from hotspots.sources import firms, gvp
+from hotspots.sources import firms, gvp, manual
 
 ATTRIBUTION = ("Thermal anomalies: NASA FIRMS VIIRS (LANCE). Volcanoes: Smithsonian Global Volcanism Program. "
                "Coastlines: Natural Earth.")
@@ -61,9 +61,30 @@ def process(detections: list[Detection], volcanoes: list[Volcano], cfg: dict,
     return markers, activities, stats
 
 
+def load_manual_eruptions(path: Path | None, volcanoes: list[Volcano], as_of: datetime,
+                          max_age_days: float, log=print) -> tuple[set[str], dict]:
+    """Volcano ids from the hand-maintained eruptions list, if it exists and is fresh."""
+    if path is None or not path.exists():
+        return set(), {"used": False, "reason": "no file"}
+    updated = manual.last_updated(path)
+    age_days = max(0.0, (as_of - updated).total_seconds() / 86400) if updated else None
+    parsed = manual.parse(path.read_text(encoding="utf-8"), volcanoes)
+    meta = {"updated": updated.isoformat() if updated else None, "volcanoes": len(parsed.ids),
+            "unmatched": parsed.unmatched, "ambiguous": parsed.ambiguous}
+    for line in parsed.unmatched:
+        log(f"{path.name}: no catalogue volcano named {line!r}")
+    for line, ids in parsed.ambiguous.items():
+        log(f"{path.name}: {line!r} matches several volcanoes ({', '.join(ids)}); all used")
+    if age_days is None or age_days > max_age_days:
+        log(f"{path.name}: last updated {age_days:.0f} days ago (limit {max_age_days}); ignored")
+        return set(), {**meta, "used": False, "reason": "stale"}
+    log(f"{path.name}: {len(parsed.ids)} erupting volcanoes, updated {age_days:.1f} days ago")
+    return parsed.ids, {**meta, "used": True}
+
+
 def run(cfg: dict, out_dir: Path, cache_dir: Path, *, map_key: str | None = None,
         previous_url: str | None = None, as_of: datetime | None = None,
-        firms_csv: Path | None = None, log=print) -> dict:
+        firms_csv: Path | None = None, eruptions_file: Path | None = None, log=print) -> dict:
     as_of = as_of or datetime.now(timezone.utc)
     f = cfg["firms"]
 
@@ -93,6 +114,11 @@ def run(cfg: dict, out_dir: Path, cache_dir: Path, *, map_key: str | None = None
         erupting_ids = set()
         log(f"GVP eruptions fetch failed ({eruptions.error}); no marker shown as erupting")
     cat_meta = {**cat_meta, "continuing_eruptions": len(erupting_ids) if eruptions.ok else None}
+
+    manual_ids, manual_meta = load_manual_eruptions(eruptions_file, volcanoes, as_of,
+                                                    cfg["eruptions"]["max_manual_age_days"], log)
+    erupting_ids |= manual_ids
+    cat_meta = {**cat_meta, "manual_eruptions": manual_meta}
 
     markers, activities, stats = process(detections, volcanoes, cfg, as_of, erupting_ids)
     log("Stats: " + json.dumps(stats))
