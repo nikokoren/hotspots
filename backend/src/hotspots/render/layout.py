@@ -20,6 +20,9 @@ ICON_BOX = {                               # visible shape, fractions of the can
     "lava": (0.052, 0.420, 0.948, 0.946),  # cone with lava channel: heat detected
     "erupt": (0.052, 0.054, 0.948, 0.946),  # cone with plume: GVP continuing eruption
 }
+# Short country names for the recipe's volcano list (GVP spells countries out in full).
+COUNTRY_SHORT = {"United States": "USA", "Papua New Guinea": "PNG", "United Kingdom": "UK",
+                 "Saint Vincent and the Grenadines": "St Vincent", "Saint Kitts and Nevis": "St Kitts & Nevis"}
 LABEL_CHAR_PCT = 0.95      # approx. label character width, % of map width
 LABEL_HEIGHT_PCT = 3.6     # approx. label height, % of map height
 
@@ -33,7 +36,7 @@ def marker_list(markers: list[Marker], *, min_pct: float, max_pct: float, max_ma
     """All markers, ranked, for the framework map (projected in the browser) and the volcano list."""
     return [{"n": m.name, "lat": m.lat, "lon": m.lon, "w": icon_pct(m, min_pct, max_pct),
              "c": shade_class(m.fade_step, shades), "a": m.age_hours, "k": icon_kind(m),
-             "co": m.country, "s": m.seen}
+             "co": COUNTRY_SHORT.get(m.country, m.country), "s": m.seen}
             for m in markers[:max_markers]]
 
 
