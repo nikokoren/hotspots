@@ -1,0 +1,11 @@
+<div class="layout">
+  {% if hs_view == nil %}
+    <span class="title">Volcano data unavailable</span>
+  {% elsif hs_view.world %}
+    {% render 'volcano_world', view: hs_view, show_labels: hs_labels, map_scale: 2 %}
+  {% else %}
+    {% render 'volcano_closeup', view: hs_view, markers: markers, show_labels: hs_labels, max_labels: max_labels, map_scale: 2 %}
+  {% endif %}
+</div>
+
+{% render 'volcano_title', data_as_of: data_as_of, stale: hs_stale %}

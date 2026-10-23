@@ -1,0 +1,8 @@
+---
+# Local preview with trmnlp (https://github.com/usetrmnl/trmnlp): `trmnlp serve` from this directory.
+watch:
+  - src
+
+custom_fields:
+  region: world-europe
+  labels: false

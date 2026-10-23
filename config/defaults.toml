@@ -1,0 +1,44 @@
+# Volcano Watch defaults. Initial values were calibrated against one week of
+# real data (see docs/report.md) and should be revisited as more data accrues.
+
+[firms]
+product = "VIIRS_SNPP_NRT"     # VIIRS_NOAA20_NRT / VIIRS_NOAA21_NRT are fallbacks; never mixed
+span = "7d"                    # public file span: 24h | 48h | 7d (no key needed)
+api_days = 5                   # only used when FIRMS_MAP_KEY is set (Area API)
+min_confidence = "nominal"     # VIIRS confidence: low | nominal | high
+request_timeout_s = 180
+max_retries = 3
+
+[catalogue]
+refresh_days = 30              # re-fetch the GVP catalogue after this many days
+
+[association]
+radius_km = 10.0               # detection → volcano matching radius
+ambiguity_ratio = 1.5          # 2nd volcano within ratio × nearest distance → ambiguous
+
+[qualify]
+max_years_since_eruption = 10  # catalogue prior: volcano erupted within N years (null disables)
+min_peak_overpass_frp_mw = 1.0 # strongest single satellite pass in the scoring window
+min_overpasses = 1             # distinct satellite passes with detections in the 72 h window
+max_distance_km = 10.0         # at least one detection this close to the summit coordinate
+isolated_max_distance_km = 5.0 # a volcano seen on a single overpass must have a detection this close
+
+[scoring]
+observation_window_hours = 72  # detections older than this (relative to run time) are ignored
+score_window_hours = 24        # window ending at the volcano's latest detection
+frp_floor_mw = 1.0             # size 0 at or below this
+frp_cap_mw = 1000.0            # size 1 at or above this (log scale between)
+
+[visual]
+full_hours = 24                # latest observation ≤ 24 h old: solid black
+expire_hours = 72              # older than this: hidden
+# Fade levels between full_hours and expire_hours (TRMNL framework grey classes;
+# land is bg--gray-70, so the faintest marker stays darker than land).
+shades = ["bg--gray-20", "bg--gray-30", "bg--gray-40", "bg--gray-50"]
+min_icon_pct = 1.2             # marker diameter, % of map width (size 0)
+max_icon_pct = 3.6             # marker diameter, % of map width (size 1)
+max_markers = 30               # per view, highest scores kept
+max_labels = 5                 # labels setting on: most recent N markers
+
+[output]
+site_url = "https://nikokoren.github.io/hotspots"
