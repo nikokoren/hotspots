@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from hotspots import __version__
-from hotspots.config import data_dir, firms_map_key, load_config
+from hotspots.config import REPO_ROOT, data_dir, firms_map_key, load_config
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -25,6 +25,8 @@ def main(argv: list[str] | None = None) -> int:
     run_p.add_argument("--previous-url", help="published site to reuse the catalogue from")
     run_p.add_argument("--firms-csv", type=Path, help="use a local FIRMS CSV instead of downloading")
     run_p.add_argument("--as-of", help="evaluation time, ISO 8601 (default: now)")
+    run_p.add_argument("--eruptions-file", type=Path, default=REPO_ROOT / "eruptions.txt",
+                       help="hand-maintained erupting volcanoes (default: eruptions.txt in the repo)")
     args = parser.parse_args(argv)
 
     if args.command is None:
@@ -37,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     as_of = datetime.fromisoformat(args.as_of.replace("Z", "+00:00")).astimezone(timezone.utc) if args.as_of else None
     try:
         pipeline.run(cfg, args.out, data_dir(), map_key=firms_map_key(), previous_url=args.previous_url,
-                     as_of=as_of, firms_csv=args.firms_csv,
+                     as_of=as_of, firms_csv=args.firms_csv, eruptions_file=args.eruptions_file,
                      log=lambda msg: print(msg, file=sys.stderr))
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)

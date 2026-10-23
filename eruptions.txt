@@ -1,0 +1,15 @@
+# Erupting volcanoes: hand-maintained list, read by the daily map update.
+#
+# Once a week, paste the volcano names from the Smithsonian/USGS Weekly Volcanic
+# Activity Report (https://volcano.si.edu/reports_weekly.cfm): the "Ongoing Activity"
+# section, plus any eruptions under "New Activity/Unrest". Unrest alone (earthquakes,
+# swelling) does not belong here.
+#
+# - One volcano per line. Anything after a comma or "(" is ignored, so lines like
+#   "Dukono, Halmahera (Indonesia)" can be pasted as they are.
+# - Names that don't match the Smithsonian catalogue are listed in the
+#   Publish maps workflow log.
+# - Committing this file republishes the map. The list is ignored once its last
+#   commit is more than 14 days old (config/defaults.toml: max_manual_age_days).
+# - Lines starting with # are ignored.
+
