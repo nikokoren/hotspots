@@ -68,3 +68,12 @@ def test_embedded_world_map_matches_build_script():
     embedded = base64.b64decode(re.search(r"world_mask = '([^']+)'", shared).group(1))
     assert embedded == (SCRIPT.parents[2] / "trmnl" / "assets" / "world.png").read_bytes()
     assert embedded[16:24] == (2048).to_bytes(4, "big") + (1024).to_bytes(4, "big")
+
+
+def test_world_and_closeup_use_the_same_land_and_sea_paint():
+    """Both map kinds must paint land gray-70 and sea white, with no per-bit-depth overrides."""
+    shared = (SCRIPT.parents[2] / "trmnl" / "src" / "shared.liquid").read_text()
+    assert '<div class="hs-map bg--gray-70">' in shared              # world: land shows through the mask
+    assert 'paint(opts.style, "background", "gray-70")' in shared     # close-up: land
+    assert 'paint(opts.style, "fill", "white")' in shared             # close-up: sea (world mask is white)
+    assert "bit:bg--gray" not in shared
