@@ -140,21 +140,24 @@
     }
 
     // Labels with leader lines, mirroring backend/src/hotspots/render/labels.py (in px):
-    // next to the icon if free, else out along one of eight directions with a line back
-    // to the icon (never through another icon or label), else dropped. Newest first.
-    var ANGLES = [0, 180, -45, -135, 45, 135, -90, 90];
+    // next to the icon if free, else out along one of sixteen directions with a line back
+    // to the icon (never through a label or an icon not stacked on its own), else dropped.
+    // Newest first.
+    var ANGLES = [0, 180, -45, -135, 45, 135, -90, 90, -22.5, -157.5, 22.5, 157.5, -67.5, -112.5, 67.5, 112.5];
     var ICON_BOX = { lava: [0.052, 0.420, 0.948, 0.946], erupt: [0.052, 0.054, 0.948, 0.946] };
     function inside(px, py, b) { return b[0] < px && px < b[2] && b[1] < py && py < b[3]; }
-    function lineHits(ln, bs) {
-      for (var k = 1; k <= 12; k++) {
-        var t = k / 13, px = ln[0] + (ln[2] - ln[0]) * t, py = ln[1] + (ln[3] - ln[1]) * t;
+    function lineHits(ln, bs, step) {
+      var n = Math.max(2, Math.ceil(Math.hypot(ln[2] - ln[0], ln[3] - ln[1]) / step));
+      for (var k = 1; k < n; k++) {
+        var t = k / n, px = ln[0] + (ln[2] - ln[0]) * t, py = ln[1] + (ln[3] - ln[1]) * t;
         for (var j = 0; j < bs.length; j++) if (inside(px, py, bs[j])) return true;
       }
       return false;
     }
     function placeLabels(box, W, H, shown) {
       var boxes = shown.map(function (s) { return s.box; });
-      var nIcons = boxes.length, lines = [], g = 3, steps = [0.04, 0.07, 0.10].map(function (f) { return f * W; });
+      var nIcons = boxes.length, lines = [], g = 3, sample = 0.0025 * W;
+      var steps = [0.015, 0.025, 0.035, 0.05, 0.065, 0.08, 0.10].map(function (f) { return f * W; });
       var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.setAttribute("class", "hs-lines");
       svg.setAttribute("viewBox", "0 0 " + W + " " + H);
@@ -169,11 +172,12 @@
           span.textContent = s.m.n;
           box.appendChild(span);
           var tw = span.offsetWidth, th = span.offsetHeight;
-          var others = boxes.filter(function (_, j) { return j !== i; });
+          var near = [ib[0] - g, ib[1] - g, ib[2] + g, ib[3] + g];
+          var blockers = boxes.filter(function (b, j) { return j !== i && (j >= nIcons || !overlaps(b, near)); });
           function fits(b) {
             return b[0] >= 0 && b[1] >= 0 && b[2] <= W && b[3] <= H &&
               !boxes.some(function (o) { return overlaps(b, o); }) &&
-              !lines.some(function (ln) { return lineHits(ln, [b]); });
+              !lines.some(function (ln) { return lineHits(ln, [b], sample); });
           }
           function rectFor(anchor, ex, ey, vertical) {
             if (anchor === "start") return [ex, ey - th / 2, ex + tw, ey + th / 2];
@@ -197,7 +201,7 @@
               var a = dx > 0.3 ? "start" : dx < -0.3 ? "end" : "middle";
               var r = rectFor(a, ex, ey, dy);
               var ln = [x + dx * r0, y + dy * r0, ex, ey];
-              if (fits(r) && !lineHits(ln, others.concat(boxes.slice(nIcons)))) pick = { a: a, r: r, ln: ln };
+              if (fits(r) && !lineHits(ln, blockers, sample)) pick = { a: a, r: r, ln: ln };
             }
           }
           if (!pick) { span.remove(); return; }
@@ -243,7 +247,6 @@
 <div class="title_bar">
   {% render 'volcano_icon' %}
   <span class="title">Hotspots</span>
-  <span class="instance">{% if data_as_of %}VIIRS {{ data_as_of | date: "%b %-d, %H:%M" }} UTC{% if stale %} · stale{% endif %}{% else %}No data{% endif %}</span>
 </div>
 {% endtemplate %}
 {% assign cfv = trmnl.plugin_settings.custom_fields_values %}
@@ -251,8 +254,3 @@
 {% assign hs_view = views[hs_region] | default: views[default_view] %}
 {% assign hs_labels = false %}
 {% if cfv.labels == true or cfv.labels == "true" or cfv.labels == "yes" %}{% assign hs_labels = true %}{% endif %}
-{% assign hs_now = "now" | date: "%s" | plus: 0 %}
-{% assign hs_gen = generated_at | date: "%s" | plus: 0 %}
-{% assign hs_age_h = hs_now | minus: hs_gen | divided_by: 3600 %}
-{% assign hs_stale = false %}
-{% if generated_at and hs_age_h > 36 %}{% assign hs_stale = true %}{% endif %}

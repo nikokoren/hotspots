@@ -5,8 +5,9 @@ so the 2:1 map spans x 0..100, y 0..50 and distances are isotropic.
 
 Each label, newest volcano first:
 1. sits right next to its icon (right, left, above, below) if that spot is free;
-2. otherwise moves out to the nearest free spot in one of eight directions and gets a
-   leader line back to its icon; the line may not cross another icon or label;
+2. otherwise moves out to the nearest free spot in one of sixteen directions and gets a
+   leader line back to its icon; the line may not cross another label, or an icon other
+   than those stacked on its own (a buried icon could otherwise only reach far spots);
 3. otherwise is dropped.
 """
 
@@ -15,10 +16,10 @@ from __future__ import annotations
 import math
 
 GAP = 0.4                       # icon edge to label, map-width %
-LEADER_STEPS = (4.0, 7.0, 10.0)  # leader lengths beyond the icon edge, map-width %
+LEADER_STEPS = (1.5, 2.5, 3.5, 5.0, 6.5, 8.0, 10.0)  # leader lengths beyond the icon edge, map-width %
 # Leader directions in degrees (0 = right, 90 = down), in order of preference.
-ANGLES = (0, 180, -45, -135, 45, 135, -90, 90)
-SAMPLES = 12                    # points checked along each leader line
+ANGLES = (0, 180, -45, -135, 45, 135, -90, 90, -22.5, -157.5, 22.5, 157.5, -67.5, -112.5, 67.5, 112.5)
+SAMPLE_STEP = 0.25              # spacing of the points checked along a leader line, map-width %
 
 
 def place(icons: list[dict], limit: int, *, char_w: float, text_h: float,
@@ -39,7 +40,10 @@ def place(icons: list[dict], limit: int, *, char_w: float, text_h: float,
         c = icons[i]
         tw, th = char_w * len(c["n"]), text_h
         own = boxes[i]
-        others = [b for j, b in enumerate(boxes) if j != i]
+        # The leader may cross icons stacked on (overlapping or touching) this one, not
+        # other icons or placed labels.
+        near = (own[0] - GAP, own[1] - GAP, own[2] + GAP, own[3] + GAP)
+        blockers = [b for j, b in enumerate(boxes) if j != i and (j >= len(icons) or not _overlaps(b, near))]
 
         def fits(box) -> bool:
             if box[0] < 0 or box[1] < 0 or box[2] > width or box[3] > height:
@@ -75,7 +79,7 @@ def place(icons: list[dict], limit: int, *, char_w: float, text_h: float,
                     else:
                         anchor, ax, box = "middle", ex, (ex - tw / 2, ey, ex + tw / 2, ey + th)
                     line = (x + dx * r0, y + dy * r0, ex, ey)
-                    if not fits(box) or _line_hits_boxes(line, others + [b for b in boxes[len(icons):]]):
+                    if not fits(box) or _line_hits_boxes(line, blockers):
                         continue
                     placed = {"i": i, "x": ax, "y": (box[1] + box[3]) / 2, "a": anchor,
                               "ld": [round(v, 2) for v in line]}, box
@@ -109,8 +113,9 @@ def _inside(px: float, py: float, b) -> bool:
 
 def _line_hits_boxes(line, boxes) -> bool:
     x1, y1, x2, y2 = line
-    for k in range(1, SAMPLES + 1):
-        t = k / (SAMPLES + 1)
+    n = max(2, math.ceil(math.hypot(x2 - x1, y2 - y1) / SAMPLE_STEP))
+    for k in range(1, n):
+        t = k / n
         px, py = x1 + (x2 - x1) * t, y1 + (y2 - y1) * t
         if any(_inside(px, py, b) for b in boxes):
             return True
