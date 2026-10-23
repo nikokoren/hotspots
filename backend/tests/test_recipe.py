@@ -43,10 +43,19 @@ def test_closeup_uses_framework_map(site):
     body = html.split("</style>")[1]
     assert 'id="hs-closeup" class="map' in body and "hs-strip" not in body
     assert "maplibre-gl/5.24.0/maplibre-gl.js" in body and 'tiles: "trmnl"' in body
-    assert "var bbox = [-26, 27, 42, 67];" in body
-    assert 'var showLabels = false;' in body
+    assert "bbox: [-26, 27, 42, 67]," in body
+    assert "showLabels: false," in body
     assert '"n": "Kilauea"' in body and '"n": "Etna"' in body  # all markers; the browser filters
     assert "window.onload" not in body and "async function" not in body  # TRMNL lint rules
+
+
+def test_world_view_offers_framework_map_and_volcano_list(site):
+    html = preview.render(site, "half_vertical", "world-europe", labels=False, device="v2")
+    body = html.split("</style>")[1]
+    assert 'id="hs-native"' in body and 'HSMap.start("hs-native"' in body  # used where it fills the space
+    assert "hs-strip" in body                                             # our map otherwise
+    assert body.count('<div class="item">') == 2 and 'data-overflow="true"' in body
+    assert body.index(">Kilauea<") < body.index(">Etna<")                 # newest first
 
 
 def test_unset_region_falls_back_to_europe_world(site):

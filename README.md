@@ -24,7 +24,11 @@ The eruption drawing is also the recipe icon.
 Both map kinds use the TRMNL framework map's **native colours** (its `map-land` and `map-water` slots:
 white land and a dark water dither on 1-bit, greys on 4-bit, theme and dark-mode aware).
 
-- **World views:** the whole globe re-centred on the chosen region. The map box is painted with
+- **World views:** the whole globe re-centred on the chosen region. Where TRMNL's framework map fills the
+  space at a whole-number zoom (TRMNL X full screen and quadrant) it is used, as in the close-ups; it hides
+  at most 15% of the longitudes, at the edges of the map. Elsewhere the recipe draws its own 2:1 map, and the
+  height or width it leaves is filled with a list of the volcanoes, newest first (name, country, erupting or
+  heat only, time since last seen). For our own map, the box is painted with
   `map-water`, and a strip painted with `map-land` is masked to the land by our own world mask, generated
   from Natural Earth by `backend/scripts/build_world_map.py` (2048×1024, 1-bit, embedded in
   `trmnl/src/shared.liquid`; source PNG in `trmnl/assets/world.png`). Markers are positioned in Liquid.

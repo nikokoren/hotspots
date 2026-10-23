@@ -50,9 +50,12 @@ def test_view_markers_filter_limit_and_order():
 
 
 def test_marker_list_for_closeups():
-    markers = [_marker("Etna", 37.75, 15.0, 0.25, step=2), _marker("Kilauea", 19.4, -155.3, 1.0)]
+    from dataclasses import replace
+    markers = [replace(_marker("Etna", 37.75, 15.0, 0.25, step=2), country="Italy", seen=1792756800),
+               _marker("Kilauea", 19.4, -155.3, 1.0)]
     out = marker_list(markers, min_pct=1, max_pct=5, max_markers=1, shades=SHADES)
-    assert out == [{"n": "Etna", "lat": 37.75, "lon": 15.0, "w": 2.0, "c": "bg--gray-30", "a": 1.0, "k": "lava"}]
+    assert out == [{"n": "Etna", "lat": 37.75, "lon": 15.0, "w": 2.0, "c": "bg--gray-30", "a": 1.0, "k": "lava",
+                    "co": "Italy", "s": 1792756800}]
 
 
 def test_icon_kind_follows_official_eruption_flag():

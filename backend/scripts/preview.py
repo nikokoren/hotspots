@@ -59,7 +59,7 @@ def render(site: Path, layout: str, region: str, labels: bool, device: str,
     view = f'<div class="view view--{layout}">{body}</div>'
     if mashup:
         view = f'<div class="{mashup}">{view}</div>'
-    return (f'<!DOCTYPE html><html><head><link rel="stylesheet" href="{css}" />'
+    return (f'<!DOCTYPE html><html><head><meta charset="utf-8" /><link rel="stylesheet" href="{css}" />'
             f'<script type="module" src="{js}"></script></head>'
             f'<body class="environment trmnl"><div class="{screen} screen--fonts-trmnl">{view}</div></body></html>')
 

@@ -63,6 +63,7 @@ def build_markers(activities: list[VolcanoActivity], cfg: dict, as_of: datetime,
         v = act.volcano
         markers.append(Marker(volcano_id=v.volcano_id, name=v.name, lat=v.lat, lon=v.lon,
                               size=round(act.score, 4), fade_step=step, age_hours=round(age, 1),
-                              erupting=v.volcano_id in erupting_ids))
+                              erupting=v.volcano_id in erupting_ids, country=v.country,
+                              seen=int(act.latest_observation.timestamp())))
     markers.sort(key=lambda m: (-m.size, m.age_hours, m.volcano_id))
     return markers
