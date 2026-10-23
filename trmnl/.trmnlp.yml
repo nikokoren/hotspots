@@ -1,10 +1,8 @@
 ---
-# Local preview config for trmnlp (https://github.com/usetrmnl/trmnlp)
+# Local preview with trmnlp (https://github.com/usetrmnl/trmnlp): `trmnlp serve` from this directory.
 watch:
   - src
 
-# Sample variables for local preview; real values come from the backend's polling JSON.
-variables:
-  trmnl:
-    plugin_settings:
-      instance_name: hotspots
+custom_fields:
+  region: world-pacific
+  labels: "no"

@@ -1,75 +1,71 @@
 # hotspots
 
-**Working title:** Volcano Watch — a TRMNL recipe showing a minimalist world map of
-recent volcanic thermal activity. One volcano-shaped marker per volcano; marker
-size reflects relative observed thermal activity (NASA FIRMS VIIRS FRP) and
-opacity fades as the latest qualifying observation ages.
+**Working title:** Volcano Watch. A public TRMNL recipe showing a minimalist map of
+recent volcanic heat. Each qualifying volcano gets one marker:
 
-> Status: **scaffolding only.** Modules are stubs; nothing fetches, scores or
-> renders yet. See [`docs/requirements.md`](docs/requirements.md) for the full
-> specification.
+- **size** shows relative observed thermal activity (NASA FIRMS VIIRS fire radiative power, log scale);
+- **fill** shows the age of the latest observation: solid ≤ 24 h, hatched ≤ 48 h, outline ≤ 72 h, then hidden.
+
+Marker size is not eruption size, danger or probability, and no marker does not mean a volcano is inactive.
+
+Spec: [`docs/requirements.md`](docs/requirements.md). Data validation and threshold
+results: [`docs/report.md`](docs/report.md).
+
+## How it works
+
+```
+GitHub Actions (daily)                     GitHub Pages                         TRMNL (every install)
+  FIRMS VIIRS 7-day CSV ─┐                   latest.json  ◄──── polling ──────── recipe (Liquid)
+  GVP volcano catalogue ─┼─► hotspots run ─► maps/<view>[-labels].svg ◄── <img> ─┘
+  Natural Earth (vendored)┘                  diagnostics.json, catalogue.json
+```
+
+Only the GitHub Actions job contacts NASA and the Smithsonian; every recipe install reads the shared,
+pre-rendered output. If the FIRMS fetch fails, nothing is deployed and the previous maps stay up unchanged.
 
 ## Layout
 
 ```
-.
-├── backend/                  Python data pipeline (server-side; holds the FIRMS key)
-│   ├── src/hotspots/
-│   │   ├── config.py         Settings loaded from config/defaults.toml + env
-│   │   ├── models.py         Shared data types (Volcano, Detection, VolcanoActivity, Marker)
-│   │   ├── cache.py          Last-good-result and catalogue caching
-│   │   ├── pipeline.py       Orchestrates the processing steps (spec §5)
-│   │   ├── cli.py            `hotspots` command-line entry point
-│   │   ├── sources/          Upstream integrations
-│   │   │   ├── firms.py      NASA FIRMS VIIRS_SNPP_NRT (primary)
-│   │   │   ├── gvp.py        Smithsonian GVP volcano catalogue + weekly reports
-│   │   │   └── usgs.py       USGS HANS notices (optional, later)
-│   │   ├── processing/
-│   │   │   ├── association.py  Detection → volcano matching, ambiguity handling
-│   │   │   ├── scoring.py      Activity score + normalization
-│   │   │   └── visual.py       Marker size / opacity / eligibility / ranking
-│   │   └── render/
-│   │       └── map.py        World map + marker rendering (SVG)
-│   ├── assets/               Volcano silhouette SVG, basemap data
-│   └── tests/
-├── config/defaults.toml      Tunable thresholds (window, radius, sizes, fading…)
-├── trmnl/                    TRMNL recipe (Liquid markup, trmnlp-compatible)
-│   ├── .trmnlp.yml
-│   └── src/                  full / half / quadrant layouts + settings.yml
-└── docs/
-    ├── requirements.md       Product + technical specification
-    └── report.md             Prototype validation report (to be written)
+backend/src/hotspots/
+  sources/firms.py, gvp.py, usgs.py    upstream integrations (USGS still a stub)
+  processing/association.py            detection → volcano matching, ambiguity flags
+  processing/scoring.py                overpass grouping, activity score, size normalization
+  processing/visual.py                 qualification rules, fade steps, ranking
+  render/map.py                        Equal Earth SVG renderer, views, labels
+  pipeline.py, cache.py, cli.py
+backend/scripts/                       basemap builder, calibration sweep
+config/defaults.toml                   all thresholds
+trmnl/src/                             recipe: settings.yml + Liquid layouts
+.github/workflows/                     publish (daily → Pages), CI (tests)
 ```
-
-Data acquisition, scoring and rendering are kept in separate modules so new
-sources (USGS notices, seismic) can be added without touching the map.
 
 ## Development
 
 ```sh
-cd backend
-python -m venv .venv && . .venv/bin/activate
-pip install -e '.[dev]'
-cp ../.env.example ../.env   # then add your FIRMS MAP_KEY
-pytest
+pip install -e './backend[dev]'
+pytest backend
+hotspots run --out site                       # live data → site/
+hotspots run --out site --firms-csv f.csv --as-of 2026-10-23T12:00Z   # replay saved data
+python backend/scripts/calibrate.py f.csv --as-of 2026-10-23T12:00Z    # threshold sweep
 ```
 
-TRMNL markup can be previewed locally with
-[`trmnlp`](https://github.com/usetrmnl/trmnlp) from the `trmnl/` directory.
+Recipe markup can be previewed with [`trmnlp`](https://github.com/usetrmnl/trmnlp) from `trmnl/`.
 
-## Credentials
+## Deployment
 
-The NASA FIRMS MAP_KEY (register at
-https://firms.modaps.eosdis.nasa.gov/api/map_key) is read from the
-`FIRMS_MAP_KEY` environment variable. Never commit it, and never put it in the
-Liquid markup or generated output.
+1. Repo **Settings → Pages → Source: GitHub Actions**.
+2. Run the **Publish maps** workflow once (Actions tab → Run workflow).
+3. Optional: add a `FIRMS_MAP_KEY` repository secret to use the FIRMS Area API instead of the public files.
 
-## Data sources & attribution
+## Recipe settings
 
-- NASA FIRMS — VIIRS S-NPP NRT active fire / thermal anomaly data.
-- Smithsonian Institution Global Volcanism Program — Volcanoes of the World catalogue, weekly reports.
-- USGS Volcano Hazards Program — HANS notices (optional, future).
+- **Map view:** World (Pacific / Atlantic / Americas centred), Europe & Mediterranean, Africa & Middle East,
+  North America & Alaska, Central America & Caribbean, South America, Japan–Kurils–Kamchatka,
+  Indonesia & Philippines, Melanesia–Tonga–New Zealand.
+- **Labels:** off (default) or on; on names the 5 most recently observed volcanoes.
 
-Thermal anomalies are not a measure of eruption magnitude, danger, or
-eruption probability. A fading marker means observations have aged, not that
-activity has stopped.
+## Data sources and attribution
+
+- NASA FIRMS: VIIRS S-NPP NRT active fire / thermal anomaly data (LANCE). https://firms.modaps.eosdis.nasa.gov/
+- Global Volcanism Program, Smithsonian Institution: Volcanoes of the World database. https://volcano.si.edu/
+- Natural Earth: land polygons, public domain. https://www.naturalearthdata.com/

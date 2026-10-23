@@ -14,7 +14,7 @@ build/
 dist/
 
 # Runtime caches and outputs
-data/
+/data/
 backend/data/
 output/
 

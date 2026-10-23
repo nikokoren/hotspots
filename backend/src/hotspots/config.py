@@ -6,8 +6,12 @@ import os
 import tomllib
 from pathlib import Path
 
+# Editable install / source checkout: backend/src/hotspots/config.py → repo root.
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG = REPO_ROOT / "config" / "defaults.toml"
+if not DEFAULT_CONFIG.exists():
+    REPO_ROOT = Path.cwd()
+    DEFAULT_CONFIG = REPO_ROOT / "config" / "defaults.toml"
 
 
 def load_config(path: Path | None = None) -> dict:

@@ -1,4 +1,15 @@
 {% comment %}
-  Shared partials for all layouts.
-  Expected polling payload (TBD): { map_svg | markers[], generated_at, data_as_of, stale }
+  Shared by all layouts. Polled payload (latest.json): site_url, version, generated_at, data_as_of, marker_count.
+  Maps are pre-rendered black-and-white SVGs, one per view (+ "-labels" variant).
 {% endcomment %}
+{% assign cfv = trmnl.plugin_settings.custom_fields_values %}
+{% assign hs_region = cfv.region | default: "world-pacific" %}
+{% assign hs_suffix = "" %}
+{% if cfv.labels == "yes" %}{% assign hs_suffix = "-labels" %}{% endif %}
+{% assign hs_now = "now" | date: "%s" | plus: 0 %}
+{% assign hs_gen = generated_at | date: "%s" | plus: 0 %}
+{% assign hs_age_h = hs_now | minus: hs_gen | divided_by: 3600 %}
+<style>
+  .hs-map { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .hs-wrap { width: 100%; height: 100%; }
+</style>

@@ -1,12 +1,17 @@
-<div class="layout">
-  <div class="columns">
-    <div class="column">
-      {% comment %} TODO: world map with volcano markers (half_vertical) {% endcomment %}
+<div class="layout layout--col layout--center">
+  {% if site_url %}
+    <div class="hs-wrap">
+      <img class="hs-map" src="{{ site_url }}/maps/{{ hs_region }}{{ hs_suffix }}.svg?v={{ version }}" alt="Volcano thermal activity map">
     </div>
-  </div>
+  {% else %}
+    <span class="title">Volcano data unavailable</span>
+  {% endif %}
 </div>
 
 <div class="title_bar">
   <span class="title">hotspots</span>
-  <span class="instance">Volcanic thermal activity · NASA FIRMS / Smithsonian GVP</span>
+  <span class="instance">
+    {% if data_as_of %}VIIRS {{ data_as_of | date: "%b %-d, %H:%M" }} UTC{% endif %}
+    {% if hs_age_h > 36 %} · stale{% endif %}
+  </span>
 </div>

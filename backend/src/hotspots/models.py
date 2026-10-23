@@ -8,12 +8,15 @@ from datetime import datetime
 
 @dataclass(frozen=True)
 class Volcano:
-    """A catalogue entry (Smithsonian GVP)."""
+    """A catalogue entry (Smithsonian GVP Holocene volcanoes)."""
 
     volcano_id: str
     name: str
     lat: float
     lon: float
+    country: str = ""
+    last_eruption_year: int | None = None
+    landform: str = ""
 
 
 @dataclass(frozen=True)
@@ -27,6 +30,21 @@ class Detection:
     confidence: str | None
     brightness_k: float | None
     satellite: str | None = None
+    daynight: str | None = None
+
+
+@dataclass(frozen=True)
+class Overpass:
+    """All of one volcano's detections from a single satellite pass.
+
+    Adjacent pixels in one pass are distinct ground area, so their FRP is
+    summed. Separate passes re-observe the same hotspot and are never summed
+    for scoring.
+    """
+
+    acquired_at: datetime
+    pixel_count: int
+    total_frp_mw: float
 
 
 @dataclass
@@ -35,22 +53,28 @@ class VolcanoActivity:
 
     volcano: Volcano
     detections: list[Detection] = field(default_factory=list)
+    overpasses: list[Overpass] = field(default_factory=list)
     accumulated_frp_mw: float = 0.0
     peak_frp_mw: float = 0.0
+    peak_overpass_frp_mw: float = 0.0
     latest_observation: datetime | None = None
-    ambiguous: bool = False
+    ambiguous_with: list[str] = field(default_factory=list)
+    flags: list[str] = field(default_factory=list)
     score: float = 0.0
+    qualifies: bool = False
 
 
 @dataclass(frozen=True)
 class Marker:
     """Render-ready marker; independent of the data sources."""
 
+    volcano_id: str
     name: str
     lat: float
     lon: float
-    size_px: float
-    opacity: float
+    size: float          # 0..1, relative activity (mapped to px by the renderer)
+    fade_step: int       # 0 = freshest; increases with age of latest observation
+    age_hours: float
 
 
 @dataclass
@@ -61,3 +85,4 @@ class SourceResult:
     fetched_at: datetime
     items: list = field(default_factory=list)
     error: str | None = None
+    meta: dict = field(default_factory=dict)

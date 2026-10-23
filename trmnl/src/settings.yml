@@ -2,10 +2,43 @@
 name: hotspots
 strategy: polling
 polling_verb: get
-polling_url: ''        # backend JSON endpoint (TBD); must not contain the FIRMS key
+# Public, keyless JSON published daily by the GitHub Actions pipeline.
+polling_url: https://nikokoren.github.io/hotspots/latest.json
 polling_headers: ''
-refresh_interval: 1440 # minutes; data refresh is ~daily (spec §5)
+refresh_interval: 360 # minutes; upstream data refreshes ~daily
 no_screen_padding: 'no'
 dark_mode: 'no'
 static_data: ''
-custom_fields: []
+custom_fields:
+- keyname: about
+  field_type: author_bio
+  name: About
+  description: Recent volcanic thermal activity from NASA FIRMS VIIRS satellite data, matched to the Smithsonian
+    Global Volcanism Program catalogue. Marker size shows relative observed heat (not eruption size or danger);
+    solid, hatched and outline markers show observations up to 24, 48 and 72 hours old. No detection does not mean
+    a volcano is inactive.
+- keyname: region
+  field_type: select
+  name: Map view
+  description: World views centred on different oceans, or a regional close-up.
+  options:
+  - World (Pacific centred): world-pacific
+  - World (Atlantic centred): world-atlantic
+  - World (Americas centred): world-americas
+  - Europe & Mediterranean: europe
+  - Africa & Middle East: africa-middle-east
+  - North America & Alaska: north-america
+  - Central America & Caribbean: central-america
+  - South America: south-america
+  - Japan, Kurils & Kamchatka: east-asia
+  - Indonesia & Philippines: southeast-asia
+  - Melanesia, Tonga & New Zealand: southwest-pacific
+  default: world-pacific
+- keyname: labels
+  field_type: select
+  name: Labels
+  description: Name the most recently observed volcanoes on the map.
+  options:
+  - 'Off': 'no'
+  - 'On': 'yes'
+  default: 'no'
