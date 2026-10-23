@@ -7,8 +7,11 @@ Docs:  https://volcano.si.edu/database/webservices.cfm
 Citation: Global Volcanism Program, Volcanoes of the World (v. 5.x), Smithsonian Institution.
 
 Continuing eruptions: GVP-VOTW:E3WebApp_Eruptions1960, ContinuingEruption == "True".
-This official list decides which markers show the eruption icon; everything else is
-"thermal anomaly only" (spec §4.2: a heat signal alone is not a confirmed eruption).
+GVP calls an eruption continuing until three months pass without eruptive activity.
+Its EndDate is then the latest activity GVP has recorded, so an eruption counts only
+if that is recent: a stalled database must not keep plumes on screen. This official
+list decides which markers show the eruption icon; everything else is "thermal anomaly
+only" (spec §4.2: a heat signal alone is not a confirmed eruption).
 
 Weekly reports (https://volcano.si.edu/reports_weekly.cfm?vtab=feeds) are deferred:
 they cover Wed–Tue and publish after the week closes, too coarse for recency.
@@ -17,7 +20,7 @@ they cover Wed–Tue and publish after the week closes, too coarse for recency.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from hotspots import http
 from hotspots.models import SourceResult, Volcano
@@ -44,26 +47,35 @@ def fetch_catalogue(timeout_s: float = 120, retries: int = 3) -> SourceResult:
     return SourceResult(ok=True, fetched_at=now, items=volcanoes, meta={"layer": LAYER})
 
 
-def fetch_continuing_eruptions(timeout_s: float = 120, retries: int = 3) -> SourceResult:
-    """Volcano ids (str) with an eruption GVP lists as continuing."""
+def fetch_continuing_eruptions(as_of: datetime, max_days_since_activity: float,
+                               timeout_s: float = 120, retries: int = 3) -> SourceResult:
+    """Volcano ids (str) with a continuing eruption whose latest recorded activity is recent."""
     now = datetime.now(timezone.utc)
     url = (f"{WFS_URL}?service=WFS&version=2.0.0&request=GetFeature"
            f"&typeNames={ERUPTIONS_LAYER}&outputFormat=application/json")
     try:
         data = json.loads(http.get(url, timeout_s=timeout_s, retries=retries))
-        ids = parse_continuing(data)
+        ids, stale = parse_continuing(data, as_of, max_days_since_activity)
     except Exception as exc:  # noqa: BLE001
         return SourceResult(ok=False, fetched_at=now, error=str(exc))
-    return SourceResult(ok=True, fetched_at=now, items=sorted(ids), meta={"layer": ERUPTIONS_LAYER})
+    return SourceResult(ok=True, fetched_at=now, items=sorted(ids),
+                        meta={"layer": ERUPTIONS_LAYER, "continuing_without_recent_activity": stale})
 
 
-def parse_continuing(data: dict) -> set[str]:
-    ids = set()
+def parse_continuing(data: dict, as_of: datetime, max_days_since_activity: float) -> tuple[set[str], int]:
+    """(ids with recent activity, number of continuing eruptions skipped for no recent/known activity)."""
+    cutoff = (as_of - timedelta(days=max_days_since_activity)).strftime("%Y%m%d")
+    ids, stale = set(), 0
     for feat in data.get("features", []):
         p = feat.get("properties") or {}
-        if str(p.get("ContinuingEruption", "")).lower() == "true" and p.get("VolcanoNumber") is not None:
+        if str(p.get("ContinuingEruption", "")).lower() != "true" or p.get("VolcanoNumber") is None:
+            continue
+        last = str(p.get("EndDate") or "")
+        if len(last) == 8 and last.isdigit() and last >= cutoff:
             ids.add(str(int(p["VolcanoNumber"])))
-    return ids
+        else:
+            stale += 1
+    return ids, stale
 
 
 def parse_geojson(data: dict) -> list[Volcano]:

@@ -83,10 +83,11 @@ def run(cfg: dict, out_dir: Path, cache_dir: Path, *, map_key: str | None = None
                                          cfg["catalogue"]["refresh_days"], log=log)
     log(f"Catalogue: {len(volcanoes)} volcanoes ({cat_meta['source']})")
 
-    eruptions = gvp.fetch_continuing_eruptions()
+    eruptions = gvp.fetch_continuing_eruptions(as_of, cfg["eruptions"]["max_days_since_activity"])
     if eruptions.ok:
         erupting_ids = set(eruptions.items)
-        log(f"GVP continuing eruptions: {len(erupting_ids)}")
+        log(f"GVP continuing eruptions with recent activity: {len(erupting_ids)} "
+            f"({eruptions.meta['continuing_without_recent_activity']} without)")
     else:
         # Without the official list every marker shows as thermal-only, never as erupting.
         erupting_ids = set()

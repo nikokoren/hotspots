@@ -9,7 +9,10 @@ recent volcanic heat. Each qualifying volcano gets one marker:
 Markers come in two drawings (`trmnl/assets/icons/`, built into the template by `backend/scripts/build_icons.py`):
 
 - **lava cone:** a heat signal only;
-- **cone with ash plume:** the volcano is also on the Smithsonian GVP list of continuing eruptions. If that list can't be fetched, every marker falls back to the lava cone, so a volcano is never shown as erupting by mistake.
+- **cone with ash plume:** the volcano also has an eruption the Smithsonian GVP lists as continuing, with eruptive
+  activity recorded in the last 90 days. GVP keeps an eruption "continuing" until three months pass without
+  activity, and its database can lag, so the recency check stops a stalled list from keeping plumes on screen.
+  If the list can't be fetched, every marker falls back to the lava cone, so a volcano is never shown as erupting by mistake.
 
 The eruption drawing is also the recipe icon.
 

@@ -23,6 +23,9 @@ min_overpasses = 1             # distinct satellite passes with detections in th
 max_distance_km = 10.0         # at least one detection this close to the summit coordinate
 isolated_max_distance_km = 5.0 # a volcano seen on a single overpass must have a detection this close
 
+[eruptions]
+max_days_since_activity = 90   # GVP continuing eruption counts only if its latest recorded activity is this recent
+
 [scoring]
 observation_window_hours = 72  # detections older than this (relative to run time) are ignored
 score_window_hours = 24        # window ending at the volcano's latest detection
