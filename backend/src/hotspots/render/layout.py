@@ -30,9 +30,10 @@ def shade_class(fade_step: int, shades: list[str]) -> str:
 
 def marker_list(markers: list[Marker], *, min_pct: float, max_pct: float, max_markers: int,
                 shades: list[str]) -> list[dict]:
-    """All markers, ranked, for close-up views (the browser projects and filters them)."""
+    """All markers, ranked, for the framework map (projected in the browser) and the volcano list."""
     return [{"n": m.name, "lat": m.lat, "lon": m.lon, "w": icon_pct(m, min_pct, max_pct),
-             "c": shade_class(m.fade_step, shades), "a": m.age_hours, "k": icon_kind(m)}
+             "c": shade_class(m.fade_step, shades), "a": m.age_hours, "k": icon_kind(m),
+             "co": m.country, "s": m.seen}
             for m in markers[:max_markers]]
 
 

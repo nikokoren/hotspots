@@ -14,9 +14,9 @@ custom_fields:
   field_type: author_bio
   name: About
   description: Recent volcanic thermal activity from NASA FIRMS VIIRS satellite data, matched to the Smithsonian
-    Global Volcanism Program catalogue. Marker size shows relative observed heat (not eruption size or danger);
-    solid, hatched and outline markers show observations up to 24, 48 and 72 hours old. No detection does not mean
-    a volcano is inactive.
+    Global Volcanism Program catalogue. Icon size shows relative observed heat (not eruption size or danger);
+    icons are black when last seen within 24 hours and fade to light grey by 72 hours. A plume marks a confirmed
+    eruption. No detection does not mean a volcano is inactive.
 - keyname: region
   field_type: select
   name: Map
@@ -39,4 +39,9 @@ custom_fields:
   field_type: boolean
   name: Labels
   description: Name the most recently observed volcanoes on the map.
+  default: false
+- keyname: list
+  field_type: boolean
+  name: Volcano list
+  description: World views only. List the volcanoes, newest first, beside or below the map.
   default: false

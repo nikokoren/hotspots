@@ -100,7 +100,8 @@ These include the known long-running eruptions (Kilauea, Sangay, Ibu, Lewotolok,
 - **Dense clusters** (Java, Lesser Sunda Islands) overlap on world views. Regional views separate them.
 - **One satellite only.** S-NPP is aging. NOAA-20/21 are configured as alternatives but not merged.
 - **Not yet checked with trmnlp or on a device.** Templates were rendered with a python-liquid stand-in and TRMNL's real framework CSS/JS in headless Chromium for OG (1-bit), OG Plus (2-bit) and X (4-bit), in all four layouts.
-- **Half-vertical layout** shows the 2:1 world map with much empty space; a portrait-specific view would use it better.
+- **World views on TRMNL X full screen and quadrant** use the framework map (Web Mercator), which hides up to ~15% of the longitudes at the map edges (mid-Pacific for the Europe-centred view) and enlarges polar regions. Other screens, and every screen with the *Volcano list* setting on, use the 2:1 map; the list fills the space it leaves.
+- **"Seen … ago" in the volcano list** is computed when the screen renders, but icon shades are computed by the daily run, so a shade can be up to a day behind the list.
 - **Close-up zoom is whole-number only** (the framework keeps dither on the pixel grid), so a region shows either somewhat more or up to ~20% less than its box, depending on the screen size.
 - **Close-ups need WebGL** in TRMNL's renderer; without it the framework shows the "Map unavailable" fallback.
 - **Two Hotspots close-ups in one mashup** would share an element id; not supported yet.

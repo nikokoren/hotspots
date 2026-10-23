@@ -76,6 +76,8 @@ class Marker:
     fade_step: int       # 0 = solid (≤ full_hours); 1..n = fade levels toward expiry
     age_hours: float
     erupting: bool = False  # GVP lists a continuing eruption (official), not inferred from heat
+    country: str = ""
+    seen: int = 0           # latest observation, Unix seconds (the recipe shows its age at render time)
 
 
 @dataclass
