@@ -48,7 +48,8 @@ def fade_step(age_hours: float, full_hours: float, expire_hours: float, levels: 
     return min(levels, 1 + int(frac * levels))
 
 
-def build_markers(activities: list[VolcanoActivity], cfg: dict, as_of: datetime) -> list[Marker]:
+def build_markers(activities: list[VolcanoActivity], cfg: dict, as_of: datetime,
+                  erupting_ids: set[str] | frozenset[str] = frozenset()) -> list[Marker]:
     s, vis = cfg["scoring"], cfg["visual"]
     markers = []
     for act in activities:
@@ -61,6 +62,7 @@ def build_markers(activities: list[VolcanoActivity], cfg: dict, as_of: datetime)
         act.score = normalized_size(act.peak_overpass_frp_mw, s["frp_floor_mw"], s["frp_cap_mw"])
         v = act.volcano
         markers.append(Marker(volcano_id=v.volcano_id, name=v.name, lat=v.lat, lon=v.lon,
-                              size=round(act.score, 4), fade_step=step, age_hours=round(age, 1)))
+                              size=round(act.score, 4), fade_step=step, age_hours=round(age, 1),
+                              erupting=v.volcano_id in erupting_ids))
     markers.sort(key=lambda m: (-m.size, m.age_hours, m.volcano_id))
     return markers

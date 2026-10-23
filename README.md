@@ -6,7 +6,12 @@ recent volcanic heat. Each qualifying volcano gets one marker:
 - **size** shows relative observed thermal activity (NASA FIRMS VIIRS fire radiative power, log scale);
 - **shade** shows the age of the latest observation: black ≤ 24 h, then four lighter TRMNL greys until 72 h, then hidden.
 
-Markers are a plain volcano silhouette (no smoke or lava, since a heat signal is not a confirmed eruption); the same shape is the recipe icon.
+Markers come in two drawings (`trmnl/assets/icons/`, built into the template by `backend/scripts/build_icons.py`):
+
+- **lava cone:** a heat signal only;
+- **cone with ash plume:** the volcano is also on the Smithsonian GVP list of continuing eruptions. If that list can't be fetched, every marker falls back to the lava cone, so a volcano is never shown as erupting by mistake.
+
+The eruption drawing is also the recipe icon.
 
 Both map kinds use the TRMNL framework map's **native colours** (its `map-land` and `map-water` slots:
 white land and a dark water dither on 1-bit, greys on 4-bit, theme and dark-mode aware).
@@ -31,7 +36,7 @@ results: [`docs/report.md`](docs/report.md).
 ```
 GitHub Actions (daily)                     GitHub Pages                 TRMNL (every install)
   FIRMS VIIRS 7-day CSV ─┐                   latest.json  ◄─── polling ─── recipe: world image or
-  GVP volcano catalogue ─┴─► hotspots run ─► diagnostics.json             TRMNLMaps close-up + icons
+  GVP catalogue + eruptions ┴► hotspots run ─► diagnostics.json             TRMNLMaps close-up + icons
                                              catalogue.json
 ```
 

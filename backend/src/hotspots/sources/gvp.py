@@ -6,6 +6,10 @@ Docs:  https://volcano.si.edu/database/webservices.cfm
 
 Citation: Global Volcanism Program, Volcanoes of the World (v. 5.x), Smithsonian Institution.
 
+Continuing eruptions: GVP-VOTW:E3WebApp_Eruptions1960, ContinuingEruption == "True".
+This official list decides which markers show the eruption icon; everything else is
+"thermal anomaly only" (spec §4.2: a heat signal alone is not a confirmed eruption).
+
 Weekly reports (https://volcano.si.edu/reports_weekly.cfm?vtab=feeds) are deferred:
 they cover Wed–Tue and publish after the week closes, too coarse for recency.
 """
@@ -20,6 +24,7 @@ from hotspots.models import SourceResult, Volcano
 
 WFS_URL = "https://webservices.volcano.si.edu/geoserver/GVP-VOTW/wfs"
 LAYER = "GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes"
+ERUPTIONS_LAYER = "GVP-VOTW:E3WebApp_Eruptions1960"
 
 
 def catalogue_url() -> str:
@@ -37,6 +42,28 @@ def fetch_catalogue(timeout_s: float = 120, retries: int = 3) -> SourceResult:
     except Exception as exc:  # noqa: BLE001
         return SourceResult(ok=False, fetched_at=now, error=str(exc))
     return SourceResult(ok=True, fetched_at=now, items=volcanoes, meta={"layer": LAYER})
+
+
+def fetch_continuing_eruptions(timeout_s: float = 120, retries: int = 3) -> SourceResult:
+    """Volcano ids (str) with an eruption GVP lists as continuing."""
+    now = datetime.now(timezone.utc)
+    url = (f"{WFS_URL}?service=WFS&version=2.0.0&request=GetFeature"
+           f"&typeNames={ERUPTIONS_LAYER}&outputFormat=application/json")
+    try:
+        data = json.loads(http.get(url, timeout_s=timeout_s, retries=retries))
+        ids = parse_continuing(data)
+    except Exception as exc:  # noqa: BLE001
+        return SourceResult(ok=False, fetched_at=now, error=str(exc))
+    return SourceResult(ok=True, fetched_at=now, items=sorted(ids), meta={"layer": ERUPTIONS_LAYER})
+
+
+def parse_continuing(data: dict) -> set[str]:
+    ids = set()
+    for feat in data.get("features", []):
+        p = feat.get("properties") or {}
+        if str(p.get("ContinuingEruption", "")).lower() == "true" and p.get("VolcanoNumber") is not None:
+            ids.add(str(int(p["VolcanoNumber"])))
+    return ids
 
 
 def parse_geojson(data: dict) -> list[Volcano]:
