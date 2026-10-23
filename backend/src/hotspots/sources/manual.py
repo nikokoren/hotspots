@@ -1,10 +1,11 @@
-"""Hand-maintained list of erupting volcanoes (data/eruptions.txt).
+"""Hand-maintained list of erupting volcanoes (eruptions.txt in the repo root).
 
 A stopgap while GVP's eruption database is not updated and its weekly report is not
 machine-readable for us: once a week, paste the volcano names from the GVP/USGS
 Weekly Volcanic Activity Report into the file and commit it. One volcano per line;
-anything after a comma or an opening parenthesis is ignored, so report lines like
-"Dukono, Halmahera (Indonesia)" work as pasted. Lines starting with # are comments.
+anything after a tab, a comma or an opening parenthesis is ignored, so report lines
+like "Dukono, Halmahera (Indonesia)" and rows copied from the report's table (tab-
+separated, header row included) work as pasted. Lines starting with # are comments.
 
 Names are matched to the catalogue ignoring case, accents and punctuation; GVP's
 inverted names ("Ruiz, Nevado del") also match in natural order ("Nevado del Ruiz").
@@ -52,9 +53,9 @@ def parse(text: str, volcanoes: list[Volcano]) -> ManualList:
     index = name_index(volcanoes)
     out = ManualList()
     for raw in text.splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
+        line = raw.split("\t")[0].strip()
+        if not line or line.startswith("#") or (line.lower() == "name" and "\t" in raw):
+            continue  # blank, comment, or the header row of a pasted table
         # Whole line first (catalogue names can contain commas), then the part before
         # the first comma or parenthesis.
         candidates = [line.split("(")[0], re.split(r"[,(]", line)[0]]
