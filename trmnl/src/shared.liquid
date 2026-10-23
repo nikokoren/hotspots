@@ -38,6 +38,10 @@
   .hs-wv--native > .hs-map, .hs-wv--native > .hs-list { display: none; }
   .hs-list { flex: 1 1 0; min-height: 0; width: 100%; overflow: hidden; }
   .hs-list .hs-logo { width: 34px; }
+  .hs-list .content { min-width: 0; }
+  .hs-list .content .flex { flex-wrap: nowrap; min-width: 0; }
+  .hs-list .content .label { flex: none; white-space: nowrap; }
+  .hs-list .content .description { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   /* Wide, short spaces (half-horizontal): list beside the map instead of below it. */
   @container (min-aspect-ratio: 5 / 2) {
     .hs-wv { flex-direction: row; align-items: stretch; }
@@ -94,11 +98,12 @@
     {% endif %}
   </div>
   {% comment %} Volcano list setting: framework items, newest first, in whatever space the map leaves. The framework's
-     overflow engine drops rows that don't fit and adds "and N more"; columns per screen size come from the layout. {% endcomment %}
+     overflow engine drops rows that don't fit and adds "and N more". Columns per screen size come from the
+     layout (list_cols_lg: TRMNL X; one fewer in portrait), sized to rows ~250 px wide. {% endcomment %}
   {% if show_list %}
   <div id="hs-list" class="hs-list">
     {% assign cols_lg = list_cols_lg | default: 1 %}
-    {% assign cols_lg_portrait = cols_lg | at_most: 2 %}
+    {% assign cols_lg_portrait = cols_lg | minus: 1 | at_least: 1 %}
     <div class="columns" data-overflow-max-cols="1" data-overflow-max-cols-lg="{{ cols_lg }}" data-overflow-max-cols-lg-portrait="{{ cols_lg_portrait }}" data-overflow-counter="true">
       <div class="column">
       {% assign hs_now = "now" | date: "%s" | plus: 0 %}
@@ -109,10 +114,10 @@
           <div class="icon"><span class="hs-logo hs-v--{{ m.k }}"><i class="hs-halo bg--white"></i><i class="{{ m.c }}"></i></span></div>
           <div class="content">
             <span class="title title--small">{{ m.n }}</span>
-            {% if m.co != "" %}<span class="description">{{ m.co }}</span>{% endif %}
             <div class="flex gap--small">
               {% if m.k == "erupt" %}<span class="label label--small label--filled">erupting</span>{% else %}<span class="label label--small label--outline">heat only</span>{% endif %}
               <span class="label label--small label--underline">{% if age_h < 1 %}&lt;1 h{% elsif age_h < 48 %}{{ age_h }} h{% else %}{{ age_h | divided_by: 24 }} d{% endif %} ago</span>
+              {% if m.co != "" %}<span class="description">{{ m.co }}</span>{% endif %}
             </div>
           </div>
         </div>

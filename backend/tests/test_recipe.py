@@ -61,7 +61,7 @@ def test_volcano_list_setting(site):
                           show_list=True).split("</style>")[1]
     assert "if (true) return;" in body                                        # list keeps our map
     assert body.count('<div class="item">') == 2 and 'data-overflow-counter="true"' in body
-    assert 'data-overflow-max-cols="1" data-overflow-max-cols-lg="3" data-overflow-max-cols-lg-portrait="2"' in body
+    assert 'data-overflow-max-cols="1" data-overflow-max-cols-lg="4" data-overflow-max-cols-lg-portrait="3"' in body
     assert '<span class="label label--small label--outline">heat only</span>' in body
     assert body.index(">Kilauea<") < body.index(">Etna<")                     # newest first
 

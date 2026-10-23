@@ -2,7 +2,7 @@
   {% if hs_view == nil %}
     <span class="title">Volcano data unavailable</span>
   {% elsif hs_view.world %}
-    {% render 'volcano_world', view: hs_view, markers: markers, show_labels: hs_labels, show_list: hs_list, list_cols_lg: 3, max_labels: max_labels, map_scale: 1 %}
+    {% render 'volcano_world', view: hs_view, markers: markers, show_labels: hs_labels, show_list: hs_list, list_cols_lg: 4, max_labels: max_labels, map_scale: 1 %}
   {% else %}
     {% render 'volcano_closeup', view: hs_view, markers: markers, show_labels: hs_labels, max_labels: max_labels, map_scale: 1 %}
   {% endif %}
