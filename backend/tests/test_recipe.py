@@ -49,13 +49,19 @@ def test_closeup_uses_framework_map(site):
     assert "window.onload" not in body and "async function" not in body  # TRMNL lint rules
 
 
-def test_world_view_offers_framework_map_and_volcano_list(site):
-    html = preview.render(site, "half_vertical", "world-europe", labels=False, device="v2")
-    body = html.split("</style>")[1]
-    assert 'id="hs-native"' in body and 'HSMap.start("hs-native"' in body  # used where it fills the space
-    assert "hs-strip" in body                                             # our map otherwise
-    assert body.count('<div class="item">') == 2 and 'data-overflow="true"' in body
-    assert body.index(">Kilauea<") < body.index(">Etna<")                 # newest first
+def test_world_view_offers_framework_map_without_list(site):
+    body = preview.render(site, "full", "world-europe", labels=False, device="v2").split("</style>")[1]
+    assert 'HSMap.start("hs-native"' in body and "if (false) return;" in body  # used where it fills the space
+    assert "hs-strip" in body                                                 # our map otherwise
+    assert '<div class="item">' not in body                                   # list is off by default
+
+
+def test_volcano_list_setting(site):
+    body = preview.render(site, "full", "world-europe", labels=False, device="v2",
+                          show_list=True).split("</style>")[1]
+    assert "if (true) return;" in body                                        # list keeps our map
+    assert body.count('<div class="item">') == 2 and 'data-overflow-max-cols="1"' in body
+    assert body.index(">Kilauea<") < body.index(">Etna<")                     # newest first
 
 
 def test_unset_region_falls_back_to_europe_world(site):

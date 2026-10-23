@@ -5,7 +5,7 @@ a layout with python-liquid, using TRMNL's real framework CSS/JS and the same
 page wrapper as trmnlp, against a site built by `hotspots run`.
 
     hotspots run --out site
-    python scripts/preview.py site --layout full --region europe --labels --device og_png > preview.html
+    python scripts/preview.py site --layout full --region europe --labels --list --device og_png > preview.html
 
 Open the HTML over http:// (not file://) so the framework's module script, fonts
 and the close-up map tiles load from trmnl.com, e.g. `python -m http.server`.
@@ -35,7 +35,7 @@ MAX_PAYLOAD_KB = 100  # TRMNL's merge-variable limit
 
 
 def render(site: Path, layout: str, region: str, labels: bool, device: str,
-           css: str = CSS, js: str = JS, site_url: str | None = None) -> str:
+           css: str = CSS, js: str = JS, site_url: str | None = None, show_list: bool = False) -> str:
     shared = (SRC / "shared.liquid").read_text()
     partials = {name: body for name, body in TEMPLATE_BLOCK.findall(shared)}
     markup = TEMPLATE_BLOCK.sub("", shared) + (SRC / f"{layout}.liquid").read_text()
@@ -45,7 +45,7 @@ def render(site: Path, layout: str, region: str, labels: bool, device: str,
     if size_kb > MAX_PAYLOAD_KB:
         print(f"warning: payload {size_kb:.1f} KB exceeds TRMNL's {MAX_PAYLOAD_KB} KB limit", file=sys.stderr)
     payload["site_url"] = site_url or site.resolve().as_uri()
-    values = {"labels": labels}
+    values = {"labels": labels, "list": show_list}
     if region:
         values["region"] = region
     payload["trmnl"] = {"plugin_settings": {"custom_fields_values": values}}
@@ -70,11 +70,13 @@ def main() -> None:
     ap.add_argument("--layout", default="full", choices=list(MASHUP))
     ap.add_argument("--region", default="world-europe")
     ap.add_argument("--labels", action="store_true")
+    ap.add_argument("--list", action="store_true", help="volcano list setting on")
     ap.add_argument("--device", default="og_png", choices=list(DEVICES))
     ap.add_argument("--css", default=CSS)
     ap.add_argument("--js", default=JS)
     args = ap.parse_args()
-    print(render(args.site, args.layout, args.region, args.labels, args.device, args.css, args.js))
+    print(render(args.site, args.layout, args.region, args.labels, args.device, args.css, args.js,
+                 show_list=args.list))
 
 
 if __name__ == "__main__":
