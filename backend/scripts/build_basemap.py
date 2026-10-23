@@ -6,7 +6,8 @@ Natural Earth is public domain (https://www.naturalearthdata.com/about/terms-of-
     python scripts/build_basemap.py ne_50m_land.geojson  src/hotspots/render/data/land_50m.json
 
 Source: https://github.com/nvkelso/natural-earth-vector/tree/master/geojson
-Output: {"rings": [[lon0, lat0, lon1, lat1, ...], ...]} rounded to 0.01°.
+Output: {"polygons": [[exterior, hole, ...], ...]}, each ring a flat [lon0, lat0, lon1, lat1, ...]
+list rounded to 0.01°.
 """
 
 import json
@@ -15,11 +16,12 @@ import sys
 
 def main(src: str, dst: str) -> None:
     data = json.load(open(src))
-    rings = []
+    polygons = []
     for feat in data["features"]:
         g = feat["geometry"]
         polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
         for poly in polys:
+            rings = []
             for ring in poly:
                 flat, prev = [], None
                 for lon, lat in ring:
@@ -29,8 +31,10 @@ def main(src: str, dst: str) -> None:
                         prev = pt
                 if len(flat) >= 8:
                     rings.append(flat)
+            if rings:
+                polygons.append(rings)
     with open(dst, "w") as f:
-        json.dump({"source": "Natural Earth (public domain)", "rings": rings}, f, separators=(",", ":"))
+        json.dump({"source": "Natural Earth (public domain)", "polygons": polygons}, f, separators=(",", ":"))
 
 
 if __name__ == "__main__":

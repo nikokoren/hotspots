@@ -48,8 +48,7 @@ def test_normalized_size_bounds():
 
 
 def test_fade_steps():
-    steps = [24, 48, 72]
-    assert [fade_step(h, steps) for h in (0, 24, 30, 72, 72.1)] == [0, 0, 1, 2, None]
+    assert [fade_step(h, 24, 72, 4) for h in (0, 24, 24.1, 36.1, 60, 72, 72.1)] == [0, 0, 1, 2, 4, 4, None]
 
 
 def test_process_end_to_end(cfg, as_of):
@@ -76,7 +75,7 @@ def test_isolated_far_detection_excluded(cfg, as_of):
 
 def test_expired_marker_dropped(cfg, as_of):
     markers, _, _ = process([det(19.42, -155.28, 70, 50)], [KILAUEA], cfg, as_of)
-    assert markers and markers[0].fade_step == 2
+    assert markers and markers[0].fade_step == 4
     cfg["scoring"]["observation_window_hours"] = 96
     markers, _, _ = process([det(19.42, -155.28, 80, 50)], [KILAUEA], cfg, as_of)
     assert markers == []  # older than last fade step

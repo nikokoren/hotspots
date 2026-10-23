@@ -1,5 +1,5 @@
 ---
-name: hotspots
+name: Hotspots
 strategy: polling
 polling_verb: get
 # Public, keyless JSON published daily by the GitHub Actions pipeline.
@@ -35,10 +35,7 @@ custom_fields:
   - Melanesia, Tonga & New Zealand: southwest-pacific
   default: world-pacific
 - keyname: labels
-  field_type: select
+  field_type: boolean
   name: Labels
   description: Name the most recently observed volcanoes on the map.
-  options:
-  - 'Off': 'no'
-  - 'On': 'yes'
-  default: 'no'
+  default: false

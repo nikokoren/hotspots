@@ -72,8 +72,8 @@ class Marker:
     name: str
     lat: float
     lon: float
-    size: float          # 0..1, relative activity (mapped to px by the renderer)
-    fade_step: int       # 0 = freshest; increases with age of latest observation
+    size: float          # 0..1, relative activity (mapped to icon width by the renderer)
+    fade_step: int       # 0 = solid (≤ full_hours); 1..n = fade levels toward expiry
     age_hours: float
 
 

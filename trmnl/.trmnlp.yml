@@ -5,4 +5,4 @@ watch:
 
 custom_fields:
   region: world-pacific
-  labels: "no"
+  labels: false

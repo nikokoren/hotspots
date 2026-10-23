@@ -9,11 +9,11 @@
 |---|---|
 | Backend | GitHub Actions, daily cron. Publishes static files to GitHub Pages. |
 | Distribution | Public recipe. All installs poll one shared `latest.json`; nobody hits NASA but us. |
-| Devices | All TRMNL panels. Maps are pure black-and-white SVG, so they render the same on 1-bit and greyscale panels. |
-| Size vs age | Size = activity only; age shown only through fade. |
-| Fade | Fixed fill styles instead of opacity: solid (≤ 24 h), hatched (≤ 48 h), outline (≤ 72 h), hidden after. To revisit after studying the earthquake recipe's approach. |
-| Labels | Off by default. User setting turns on labels for the 5 most recently observed volcanoes. |
-| Map | Equal Earth projection. User picks a view: 3 world centrings + 8 regions. |
+| Devices | All TRMNL panels. Map drawn in Liquid with framework classes (approach of the TRMNL earthquake recipe), so the framework handles 1-bit dithering through 16 greys and OG through X sizes. |
+| Size vs age | Size = activity only; age shown only through shade. |
+| Fade | Black ≤ 24 h, then `bg--gray-20/30/40/50` in 12 h steps, hidden after 72 h. Land is `bg--gray-70`, so the faintest marker stays darker than land. |
+| Labels | Boolean setting, off by default; labels up to 5 of the most recently observed volcanoes, placed to avoid overlaps. |
+| Map | 2:1 equirectangular (as the earthquake recipe); regional views use a mid-latitude standard parallel. User picks a view: 3 world centrings + 8 regions. Land masks generated from Natural Earth. |
 
 ## Endpoints and credentials
 
@@ -93,12 +93,13 @@ These include the known long-running eruptions (Kilauea, Sangay, Ibu, Lewotolok,
 - **Weak or cloud-covered activity is missed.** Absence of a marker does not mean inactivity.
 - **Dense clusters** (Java, Lesser Sunda Islands) overlap on world views. Regional views separate them.
 - **One satellite only.** S-NPP is aging. NOAA-20/21 are configured as alternatives but not merged.
-- **Recipe templates not yet tested** on the TRMNL renderer or in trmnlp. The SVG maps were checked in headless Chromium at 800×480.
+- **Not yet checked with trmnlp or on a device.** Templates were rendered with a python-liquid stand-in and TRMNL's real framework CSS/JS in headless Chromium for OG (1-bit), OG Plus (2-bit) and X (4-bit), in all four layouts.
+- **Half-vertical layout** shows the 2:1 map with much empty space; a portrait-specific view would use it better.
 
 ## Recommended adjustments
 
 1. Re-run the calibration sweep weekly for a month, especially during other fire seasons (Australia, the Americas), before locking thresholds.
-2. Study the earthquake recipe's fade treatment and compare it with solid/hatched/outline on a physical OG panel.
+2. Check marker legibility and the grey steps on a physical OG panel; adjust `shades` / icon sizes if needed.
 3. Consider an "unconfirmed" tier for strong, compact, repeated signals at dormant volcanoes (for example ≥ 3 passes within 2 km), drawn distinctly, so reawakenings aren't completely hidden.
 4. Add NOAA-20 as an automatic fallback when S-NPP data is missing.
-5. Render aspect-specific variants for the half and quadrant layouts if world maps prove too small there.
+5. Add portrait-aspect views for the half-vertical layout and TRMNL X portrait orientation.

@@ -30,11 +30,15 @@ frp_floor_mw = 1.0             # size 0 at or below this
 frp_cap_mw = 1000.0            # size 1 at or above this (log scale between)
 
 [visual]
-min_icon_px = 10
-max_icon_px = 34
-fade_step_hours = [24, 48, 72] # age ≤ 24 h: solid; ≤ 48 h: hatched; ≤ 72 h: outline; older: hidden
+full_hours = 24                # latest observation ≤ 24 h old: solid black
+expire_hours = 72              # older than this: hidden
+# Fade levels between full_hours and expire_hours (TRMNL framework grey classes;
+# land is bg--gray-70, so the faintest marker stays darker than land).
+shades = ["bg--gray-20", "bg--gray-30", "bg--gray-40", "bg--gray-50"]
+min_icon_pct = 1.6             # icon width, % of map width (size 0)
+max_icon_pct = 4.5             # icon width, % of map width (size 1)
 max_markers = 30               # per view, highest scores kept
-max_labels = 5                 # labelled variant: most recent N markers
+max_labels = 5                 # labels setting on: most recent N markers
 
 [output]
 site_url = "https://nikokoren.github.io/hotspots"

@@ -1,17 +1,9 @@
-<div class="layout layout--col layout--center">
-  {% if site_url %}
-    <div class="hs-wrap">
-      <img class="hs-map" src="{{ site_url }}/maps/{{ hs_region }}{{ hs_suffix }}.svg?v={{ version }}" alt="Volcano thermal activity map">
-    </div>
+<div class="layout">
+  {% if hs_view %}
+    {% render 'volcano_map', view: hs_view, site_url: site_url, version: version, show_labels: hs_labels, map_scale: 1.5 %}
   {% else %}
     <span class="title">Volcano data unavailable</span>
   {% endif %}
 </div>
 
-<div class="title_bar">
-  <span class="title">hotspots</span>
-  <span class="instance">
-    {% if data_as_of %}VIIRS {{ data_as_of | date: "%b %-d, %H:%M" }} UTC{% endif %}
-    {% if hs_age_h > 36 %} · stale{% endif %}
-  </span>
-</div>
+{% render 'volcano_title', data_as_of: data_as_of, stale: hs_stale %}

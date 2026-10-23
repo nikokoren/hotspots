@@ -38,12 +38,14 @@ def qualify(act: VolcanoActivity, cfg: dict, as_of: datetime) -> bool:
     return ok
 
 
-def fade_step(age_hours: float, steps: list[float]) -> int | None:
-    """0 = freshest. None = expired (older than the last step)."""
-    for i, limit in enumerate(steps):
-        if age_hours <= limit:
-            return i
-    return None
+def fade_step(age_hours: float, full_hours: float, expire_hours: float, levels: int) -> int | None:
+    """0 = solid (age ≤ full_hours); 1..levels spread evenly up to expire_hours; None = expired."""
+    if age_hours <= full_hours:
+        return 0
+    if age_hours > expire_hours:
+        return None
+    frac = (age_hours - full_hours) / (expire_hours - full_hours)
+    return min(levels, 1 + int(frac * levels))
 
 
 def build_markers(activities: list[VolcanoActivity], cfg: dict, as_of: datetime) -> list[Marker]:
@@ -53,7 +55,7 @@ def build_markers(activities: list[VolcanoActivity], cfg: dict, as_of: datetime)
         if not act.qualifies or act.latest_observation is None:
             continue
         age = max(0.0, (as_of - act.latest_observation).total_seconds() / 3600)
-        step = fade_step(age, vis["fade_step_hours"])
+        step = fade_step(age, vis["full_hours"], vis["expire_hours"], len(vis["shades"]))
         if step is None:
             continue
         act.score = normalized_size(act.peak_overpass_frp_mw, s["frp_floor_mw"], s["frp_cap_mw"])

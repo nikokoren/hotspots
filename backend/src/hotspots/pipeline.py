@@ -4,11 +4,12 @@ fetch FIRMS → validate → load catalogue → associate → filter → group b
 volcano/overpass → score → qualify → size/fade → render → write site.
 
 Outputs (written to `out_dir`, published to GitHub Pages):
-    latest.json             payload polled by the TRMNL recipe (small)
-    maps/<view>.svg         one map per view
-    maps/<view>-labels.svg  same map with the newest markers labelled
+    latest.json             payload polled by the TRMNL recipe: per-view marker positions
+    masks/<view>.png        land mask per view (white ocean, transparent land)
     diagnostics.json        every candidate volcano with metrics and flags (calibration)
     catalogue.json          cached GVP catalogue, reused by the next run
+
+The recipe draws the map itself (see trmnl/src/shared.liquid).
 """
 
 from __future__ import annotations
@@ -23,7 +24,9 @@ from hotspots.models import Detection, Marker, Volcano, VolcanoActivity
 from hotspots.processing.association import associate
 from hotspots.processing.scoring import aggregate
 from hotspots.processing.visual import build_markers, qualify
-from hotspots.render.map import VIEWS, render_svg
+from hotspots.render.layout import view_markers
+from hotspots.render.mask import render_mask
+from hotspots.render.views import VIEWS
 from hotspots.sources import firms
 
 ATTRIBUTION = ("Thermal anomalies: NASA FIRMS VIIRS (LANCE). Volcanoes: Smithsonian Global Volcanism Program. "
@@ -95,28 +98,30 @@ def run(cfg: dict, out_dir: Path, cache_dir: Path, *, map_key: str | None = None
 def write_site(out_dir: Path, cfg: dict, markers: list[Marker], activities: list[VolcanoActivity],
                stats: dict, as_of: datetime, data_as_of: datetime | None, firms_meta: dict, cat_meta: dict) -> None:
     vis = cfg["visual"]
-    maps = out_dir / "maps"
-    maps.mkdir(parents=True, exist_ok=True)
-    stamp = as_of.strftime("%Y%m%d%H%M")
+    masks = out_dir / "masks"
+    masks.mkdir(parents=True, exist_ok=True)
+    views = {}
     for view in VIEWS:
-        for suffix, labels in (("", 0), ("-labels", vis["max_labels"])):
-            svg = render_svg(markers, view, min_px=vis["min_icon_px"], max_px=vis["max_icon_px"],
-                             max_markers=vis["max_markers"], labels=labels)
-            (maps / f"{view.key}{suffix}.svg").write_text(svg)
+        (masks / f"{view.key}.png").write_bytes(render_mask(view))
+        views[view.key] = {
+            "label": view.label,
+            "mask": f"masks/{view.key}.png",
+            "markers": view_markers(markers, view, min_pct=vis["min_icon_pct"], max_pct=vis["max_icon_pct"],
+                                    max_markers=vis["max_markers"], max_labels=vis["max_labels"],
+                                    shades=vis["shades"]),
+        }
 
     latest = {
         "generated_at": as_of.isoformat(timespec="seconds"),
         "data_as_of": data_as_of.isoformat(timespec="seconds") if data_as_of else None,
-        "version": stamp,  # cache-buster for image URLs
+        "version": as_of.strftime("%Y%m%d%H%M"),  # cache-buster for mask URLs
         "site_url": cfg["output"]["site_url"],
         "product": firms_meta.get("product"),
         "marker_count": len(markers),
-        "markers": [{"name": m.name, "lat": m.lat, "lon": m.lon, "size": m.size,
-                     "fade_step": m.fade_step, "age_hours": m.age_hours} for m in markers],
-        "views": [{"key": v.key, "label": v.label} for v in VIEWS],
+        "views": views,
         "attribution": ATTRIBUTION,
     }
-    (out_dir / "latest.json").write_text(json.dumps(latest, indent=1))
+    (out_dir / "latest.json").write_text(json.dumps(latest, separators=(",", ":")))
 
     diag = {
         "generated_at": latest["generated_at"],

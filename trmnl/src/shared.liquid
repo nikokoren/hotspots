@@ -1,15 +1,61 @@
 {% comment %}
-  Shared by all layouts. Polled payload (latest.json): site_url, version, generated_at, data_as_of, marker_count.
-  Maps are pre-rendered black-and-white SVGs, one per view (+ "-labels" variant).
+  hotspots: shared markup for all layouts.
+
+  Polled payload (latest.json, published daily by GitHub Actions):
+    site_url, version, generated_at, data_as_of, marker_count,
+    views: { <key>: { label, mask, markers: [ { n, x, y, w, c, a, l } ] } }
+      x, y  position, % of the 2:1 map box     w  icon width, % of map width
+      c     TRMNL background class (age)        a  age in hours
+      l     label side r/l/t/b ("" = no room)   n  volcano name
+
+  Map approach follows the TRMNL earthquake recipe: a land-mask PNG (white ocean,
+  transparent land) on a framework grey box, with markers positioned on top.
 {% endcomment %}
+<style>
+  .hs-map { position: relative; width: min(100cqw, 200cqh); aspect-ratio: 2 / 1; margin: 0 auto; line-height: 0; border-radius: 8px; overflow: hidden; }
+  .hs-mask { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hs-v { position: absolute; aspect-ratio: 3 / 2; transform: translate(-50%, -50%); }
+  .hs-v > i { position: absolute; inset: 0; clip-path: polygon(0% 100%, 34% 0%, 43.5% 13.6%, 50% 1.5%, 56.5% 13.6%, 66% 0%, 100% 100%); }
+  .hs-v > i.hs-halo { inset: -22% -16% -10% -16%; }
+  .hs-l { position: absolute; white-space: nowrap; line-height: 1; }
+  .hs-l--r { left: 100%; top: 50%; transform: translateY(-50%); margin-left: 3px; }
+  .hs-l--l { right: 100%; top: 50%; transform: translateY(-50%); margin-right: 3px; }
+  .hs-l--t { bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 2px; }
+  .hs-l--b { top: 100%; left: 50%; transform: translateX(-50%); margin-top: 2px; }
+</style>
+{% template volcano_icon %}
+<svg width="24px" height="24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M1 21 L8.5 6.5 L10.6 9 L12 6.8 L13.4 9 L15.5 6.5 L23 21 Z" stroke="white" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M1 21 L8.5 6.5 L10.6 9 L12 6.8 L13.4 9 L15.5 6.5 L23 21 Z"/>
+</svg>
+{% endtemplate %}
+{% template volcano_map %}
+<div class="hs-map bg--gray-70 4bit:bg--gray-65">
+  <img class="hs-mask" src="{{ site_url }}/{{ view.mask }}?v={{ version }}" alt="" />
+  {% for m in view.markers %}
+    {% assign w = m.w | times: map_scale %}
+    <div class="hs-v" style="left: {{ m.x }}%; top: {{ m.y }}%; width: {{ w }}%;">
+      <i class="hs-halo bg--white"></i>
+      <i class="{{ m.c }}"></i>
+      {% if show_labels and m.l != "" %}<span class="hs-l hs-l--{{ m.l }} label label--small text-stroke">{{ m.n }}</span>{% endif %}
+    </div>
+  {% endfor %}
+</div>
+{% endtemplate %}
+{% template volcano_title %}
+<div class="title_bar">
+  {% render 'volcano_icon' %}
+  <span class="title">Hotspots</span>
+  <span class="instance">{% if data_as_of %}VIIRS {{ data_as_of | date: "%b %-d, %H:%M" }} UTC{% if stale %} · stale{% endif %}{% else %}No data{% endif %}</span>
+</div>
+{% endtemplate %}
 {% assign cfv = trmnl.plugin_settings.custom_fields_values %}
 {% assign hs_region = cfv.region | default: "world-pacific" %}
-{% assign hs_suffix = "" %}
-{% if cfv.labels == "yes" %}{% assign hs_suffix = "-labels" %}{% endif %}
+{% assign hs_view = views[hs_region] | default: views["world-pacific"] %}
+{% assign hs_labels = false %}
+{% if cfv.labels == true or cfv.labels == "true" or cfv.labels == "yes" %}{% assign hs_labels = true %}{% endif %}
 {% assign hs_now = "now" | date: "%s" | plus: 0 %}
 {% assign hs_gen = generated_at | date: "%s" | plus: 0 %}
 {% assign hs_age_h = hs_now | minus: hs_gen | divided_by: 3600 %}
-<style>
-  .hs-map { width: 100%; height: 100%; object-fit: contain; display: block; }
-  .hs-wrap { width: 100%; height: 100%; }
-</style>
+{% assign hs_stale = false %}
+{% if generated_at and hs_age_h > 36 %}{% assign hs_stale = true %}{% endif %}
