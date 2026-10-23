@@ -6,8 +6,9 @@ recent volcanic heat. Each qualifying volcano gets one marker:
 - **size** shows relative observed thermal activity (NASA FIRMS VIIRS fire radiative power, log scale);
 - **shade** shows the age of the latest observation: black ≤ 24 h, then four lighter TRMNL greys until 72 h, then hidden.
 
-The map follows the TRMNL earthquake recipe's approach: a land mask on a framework grey box with
-markers positioned in Liquid, so it renders natively on every TRMNL panel (1-bit to 16 greys, OG to X).
+The map follows the [TRMNL community earthquake recipe](https://usetrmnl.com/recipes/33312): a land mask
+on a framework grey box with markers positioned in Liquid, so it renders natively on every TRMNL panel
+(1-bit to 16 greys, OG to X). World views reuse that recipe's world image, re-centred on the chosen region.
 
 Marker size is not eruption size, danger or probability, and no marker does not mean a volcano is inactive.
 
@@ -19,7 +20,7 @@ results: [`docs/report.md`](docs/report.md).
 ```
 GitHub Actions (daily)                     GitHub Pages                        TRMNL (every install)
   FIRMS VIIRS 7-day CSV ─┐                   latest.json  ◄──── polling ─────── recipe (Liquid draws
-  GVP volcano catalogue ─┼─► hotspots run ─► masks/<view>.png ◄── <img> ──────┘  map + markers)
+  GVP volcano catalogue ─┼─► hotspots run ─► masks/<close-up>.png ◄── <img> ─┘  map + markers)
   Natural Earth (vendored)┘                  diagnostics.json, catalogue.json
 ```
 
@@ -36,8 +37,8 @@ backend/src/hotspots/
   processing/association.py            detection → volcano matching, ambiguity flags
   processing/scoring.py                overpass grouping, activity score, size normalization
   processing/visual.py                 qualification rules, fade steps, ranking
-  render/views.py                      map views, 2:1 equirectangular frames
-  render/mask.py                       land-mask PNG per view (pure Python rasterizer)
+  render/views.py                      map views, 2:1 equirectangular frames, world re-centring shift
+  render/mask.py                       land-mask PNG per close-up view (pure Python rasterizer)
   render/layout.py                     per-view marker positions, sizes, shades, label sides
   pipeline.py, cache.py, cli.py
 backend/scripts/                       basemap builder, calibration sweep, Liquid preview
@@ -71,13 +72,18 @@ python backend/scripts/preview.py site --layout full --region europe --labels --
 
 ## Recipe settings
 
-- **Map view:** World (Pacific / Atlantic / Americas centred), Europe & Mediterranean, Africa & Middle East,
-  North America & Alaska, Central America & Caribbean, South America, Japan–Kurils–Kamchatka,
-  Indonesia & Philippines, Melanesia–Tonga–New Zealand.
+- **Map:** one list, two kinds of option.
+  - *World – centred on …* Europe & Africa (default), the Americas, Asia & Australia, the Pacific:
+    the whole globe, rotated so that region is in the middle.
+  - *Close-up – …* Europe & Mediterranean, Africa & Middle East, North America & Alaska,
+    Central America & Caribbean, South America, Japan, Kurils & Kamchatka, Indonesia & Philippines,
+    Melanesia, Tonga & New Zealand: one region only.
 - **Labels:** toggle, off by default; on names up to 5 of the most recently observed volcanoes.
 
 ## Data sources and attribution
 
 - NASA FIRMS: VIIRS S-NPP NRT active fire / thermal anomaly data (LANCE). https://firms.modaps.eosdis.nasa.gov/
 - Global Volcanism Program, Smithsonian Institution: Volcanoes of the World database. https://volcano.si.edu/
-- Natural Earth: land polygons, public domain. https://www.naturalearthdata.com/
+- Natural Earth: land polygons for the close-up maps, public domain. https://www.naturalearthdata.com/
+- World map image: from the TRMNL community earthquake recipe (https://usetrmnl.com/recipes/33312);
+  its licence is not stated there, so confirm with the recipe author before publishing.

@@ -4,7 +4,7 @@ import zlib
 from hotspots.models import Marker
 from hotspots.render.layout import shade_class, view_markers
 from hotspots.render.mask import encode_png, rasterize
-from hotspots.render.views import VIEWS, VIEWS_BY_KEY, Frame
+from hotspots.render.views import VIEWS, VIEWS_BY_KEY, Frame, world, world_shift_pct
 
 SHADES = ["bg--gray-20", "bg--gray-30", "bg--gray-40", "bg--gray-50"]
 
@@ -14,10 +14,27 @@ def _marker(name, lat, lon, size=0.5, step=0, age=1.0):
 
 
 def test_world_frame_wraps_around_centre():
-    f = Frame(VIEWS_BY_KEY["world-pacific"])  # centred on 150°E
-    u, v = f.uv(150, 0)
+    f = Frame(VIEWS_BY_KEY["world-pacific"])  # centred on 160°E
+    u, v = f.uv(160, 0)
     assert abs(u - 0.5) < 1e-9 and abs(v - 0.5) < 1e-9
-    assert f.uv(-30.0001, 0)[0] > 0.99 and f.uv(-29.999, 0)[0] < 0.01  # seam at 30°W
+    assert f.uv(-20.0001, 0)[0] > 0.99 and f.uv(-19.999, 0)[0] < 0.01  # seam at 20°W
+
+
+def test_world_shift_matches_marker_positions():
+    """The tiled world image slid left by `shift` must put every longitude where Frame.uv puts markers."""
+    for view in VIEWS:
+        if not view.is_world:
+            continue
+        shift, f = world_shift_pct(view) / 100, Frame(view)
+        for lon in (-170, -80, 0, 15, 110, 179):
+            image_x = (lon + 180) / 360            # position in one copy of the -180..180 image
+            screen = (image_x - shift) % 1.0       # after sliding the two-copy strip left by shift
+            assert abs(screen - f.uv(lon, 0)[0]) < 1e-4, (view.key, lon)  # shift is rounded to 0.001%
+
+
+def test_default_view_is_europe_centred_world():
+    from hotspots.render.views import DEFAULT_VIEW
+    assert DEFAULT_VIEW == "world-europe" and VIEWS_BY_KEY[DEFAULT_VIEW].is_world
 
 
 def test_regional_frames_are_two_to_one_and_contain_their_box():
@@ -37,8 +54,9 @@ def test_antimeridian_region():
 
 
 def test_mask_marks_land_and_ocean():
-    rows = rasterize(VIEWS_BY_KEY["world-atlantic"], 360, 180)
-    f = Frame(VIEWS_BY_KEY["world-atlantic"])
+    view = world("atlantic", "test", 10)  # world masks are only used in tests now
+    rows = rasterize(view, 360, 180)
+    f = Frame(view)
 
     def at(lon, lat):
         u, v = f.uv(lon, lat)

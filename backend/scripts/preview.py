@@ -44,7 +44,10 @@ def render(site: Path, layout: str, region: str, labels: bool, device: str,
     if size_kb > MAX_PAYLOAD_KB:
         print(f"warning: payload {size_kb:.1f} KB exceeds TRMNL's {MAX_PAYLOAD_KB} KB limit", file=sys.stderr)
     payload["site_url"] = site_url or site.resolve().as_uri()
-    payload["trmnl"] = {"plugin_settings": {"custom_fields_values": {"region": region, "labels": labels}}}
+    values = {"labels": labels}
+    if region:
+        values["region"] = region
+    payload["trmnl"] = {"plugin_settings": {"custom_fields_values": values}}
 
     env = Environment(loader=DictLoader(partials))
     body = env.from_string(markup).render(**payload)
@@ -63,7 +66,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("site", type=Path)
     ap.add_argument("--layout", default="full", choices=list(MASHUP))
-    ap.add_argument("--region", default="world-pacific")
+    ap.add_argument("--region", default="world-europe")
     ap.add_argument("--labels", action="store_true")
     ap.add_argument("--device", default="og_png", choices=list(DEVICES))
     ap.add_argument("--css", default=CSS)

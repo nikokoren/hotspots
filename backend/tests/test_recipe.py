@@ -30,7 +30,8 @@ def site(tmp_path_factory):
 @pytest.mark.parametrize("layout", ["full", "half_horizontal", "half_vertical", "quadrant"])
 def test_layouts_render(site, layout):
     html = preview.render(site, layout, "world-pacific", labels=True, device="og_png")
-    assert 'class="hs-map' in html and "masks/world-pacific.png" in html
+    assert 'class="hs-map' in html and 'class="hs-strip" style="left: -44.444%;"' in html
+    assert html.count("data:image/png;base64,iVBOR") == 2  # tiled world image
     assert html.count('class="hs-v"') == 2
     assert ">Kilauea<" in html  # labels on
     assert "Liquid" not in html and "{{" not in html and "{%" not in html
@@ -40,9 +41,17 @@ def test_labels_off_and_region_switch(site):
     html = preview.render(site, "full", "europe", labels=False, device="og_png")
     assert html.count('class="hs-v"') == 1  # Etna only
     assert "<span class=\"hs-l " not in html
+    assert "masks/europe.png" in html and "hs-strip" not in html.split("</style>")[1]
+
+
+def test_unset_region_falls_back_to_europe_world(site):
+    html = preview.render(site, "full", "", labels=False, device="og_png")
+    assert 'class="hs-strip" style="left: -4.167%;"' in html
 
 
 def test_payload_under_trmnl_limit(site):
     assert len((site / "latest.json").read_bytes()) < preview.MAX_PAYLOAD_KB * 1024
     payload = json.loads((site / "latest.json").read_text())
-    assert set(payload["views"]) >= {"world-pacific", "europe"}
+    assert set(payload["views"]) >= {"world-europe", "world-pacific", "europe"}
+    assert payload["default_view"] == "world-europe"
+    assert not (site / "masks" / "world-europe.png").exists()  # world views use the embedded image

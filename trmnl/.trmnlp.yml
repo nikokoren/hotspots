@@ -4,5 +4,5 @@ watch:
   - src
 
 custom_fields:
-  region: world-pacific
+  region: world-europe
   labels: false

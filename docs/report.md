@@ -13,7 +13,7 @@
 | Size vs age | Size = activity only; age shown only through shade. |
 | Fade | Black ≤ 24 h, then `bg--gray-20/30/40/50` in 12 h steps, hidden after 72 h. Land is `bg--gray-70`, so the faintest marker stays darker than land. |
 | Labels | Boolean setting, off by default; labels up to 5 of the most recently observed volcanoes, placed to avoid overlaps. |
-| Map | 2:1 equirectangular (as the earthquake recipe); regional views use a mid-latitude standard parallel. User picks a view: 3 world centrings + 8 regions. Land masks generated from Natural Earth. |
+| Map | 2:1 equirectangular (as the earthquake recipe). One "Map" setting: 4 *World – centred on …* views (Europe & Africa default, Americas, Asia & Australia, Pacific) that re-centre the earthquake recipe's world image, and 8 *Close-up – …* regional views with Natural Earth land masks and a mid-latitude standard parallel. |
 
 ## Endpoints and credentials
 

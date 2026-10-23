@@ -19,21 +19,22 @@ custom_fields:
     a volcano is inactive.
 - keyname: region
   field_type: select
-  name: Map view
-  description: World views centred on different oceans, or a regional close-up.
+  name: Map
+  description: The whole world centred on a region, or a close-up of one region.
   options:
-  - World (Pacific centred): world-pacific
-  - World (Atlantic centred): world-atlantic
-  - World (Americas centred): world-americas
-  - Europe & Mediterranean: europe
-  - Africa & Middle East: africa-middle-east
-  - North America & Alaska: north-america
-  - Central America & Caribbean: central-america
-  - South America: south-america
-  - Japan, Kurils & Kamchatka: east-asia
-  - Indonesia & Philippines: southeast-asia
-  - Melanesia, Tonga & New Zealand: southwest-pacific
-  default: world-pacific
+  - 'World – centred on Europe & Africa': world-europe
+  - 'World – centred on the Americas': world-americas
+  - 'World – centred on Asia & Australia': world-asia
+  - 'World – centred on the Pacific': world-pacific
+  - 'Close-up – Europe & Mediterranean': europe
+  - 'Close-up – Africa & Middle East': africa-middle-east
+  - 'Close-up – North America & Alaska': north-america
+  - 'Close-up – Central America & Caribbean': central-america
+  - 'Close-up – South America': south-america
+  - 'Close-up – Japan, Kurils & Kamchatka': east-asia
+  - 'Close-up – Indonesia & Philippines': southeast-asia
+  - 'Close-up – Melanesia, Tonga & New Zealand': southwest-pacific
+  default: world-europe
 - keyname: labels
   field_type: boolean
   name: Labels

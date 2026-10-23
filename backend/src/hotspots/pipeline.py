@@ -5,7 +5,8 @@ volcano/overpass → score → qualify → size/fade → render → write site.
 
 Outputs (written to `out_dir`, published to GitHub Pages):
     latest.json             payload polled by the TRMNL recipe: per-view marker positions
-    masks/<view>.png        land mask per view (white ocean, transparent land)
+    masks/<view>.png        land mask per close-up view (white ocean, transparent land);
+                            world views use the earthquake recipe's world image, embedded in the recipe
     diagnostics.json        every candidate volcano with metrics and flags (calibration)
     catalogue.json          cached GVP catalogue, reused by the next run
 
@@ -26,7 +27,7 @@ from hotspots.processing.scoring import aggregate
 from hotspots.processing.visual import build_markers, qualify
 from hotspots.render.layout import view_markers
 from hotspots.render.mask import render_mask
-from hotspots.render.views import VIEWS
+from hotspots.render.views import DEFAULT_VIEW, VIEWS, world_shift_pct
 from hotspots.sources import firms
 
 ATTRIBUTION = ("Thermal anomalies: NASA FIRMS VIIRS (LANCE). Volcanoes: Smithsonian Global Volcanism Program. "
@@ -102,10 +103,14 @@ def write_site(out_dir: Path, cfg: dict, markers: list[Marker], activities: list
     masks.mkdir(parents=True, exist_ok=True)
     views = {}
     for view in VIEWS:
-        (masks / f"{view.key}.png").write_bytes(render_mask(view))
+        entry = {"label": view.label}
+        if view.is_world:
+            entry["shift"] = world_shift_pct(view)
+        else:
+            (masks / f"{view.key}.png").write_bytes(render_mask(view))
+            entry["mask"] = f"masks/{view.key}.png"
         views[view.key] = {
-            "label": view.label,
-            "mask": f"masks/{view.key}.png",
+            **entry,
             "markers": view_markers(markers, view, min_pct=vis["min_icon_pct"], max_pct=vis["max_icon_pct"],
                                     max_markers=vis["max_markers"], max_labels=vis["max_labels"],
                                     shades=vis["shades"]),
@@ -118,6 +123,7 @@ def write_site(out_dir: Path, cfg: dict, markers: list[Marker], activities: list
         "site_url": cfg["output"]["site_url"],
         "product": firms_meta.get("product"),
         "marker_count": len(markers),
+        "default_view": DEFAULT_VIEW,
         "views": views,
         "attribution": ATTRIBUTION,
     }
