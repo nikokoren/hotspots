@@ -1,9 +1,11 @@
 """Build the recipe's world map image from Natural Earth and embed it in the template.
 
 The image is an equirectangular land mask covering -180..180 / 90..-90: opaque
-white over the ocean, transparent over land. The recipe lays it on a framework
-grey box (so land renders as TRMNL grey on every panel), tiles it twice and
-slides it to re-centre the world.
+over land, transparent over the ocean. The recipe uses it as a CSS mask: the map
+box is painted with TRMNL's map-water slot and a strip painted with the map-land
+slot is masked to the land, so the world view takes the same native colours as
+the framework map (TRMNLMaps) on every panel, theme and dark mode. The strip
+repeats the mask twice and slides it to re-centre the world.
 
 Natural Earth is public domain: https://www.naturalearthdata.com/about/terms-of-use/
 
@@ -65,7 +67,7 @@ def rasterize(polygons, width: int, height: int) -> list[bytearray]:
 
 
 def encode_png(rows: list[bytearray]) -> bytes:
-    """1-bit palette PNG: index 0 = opaque white (ocean), 1 = transparent (land)."""
+    """1-bit palette PNG used as an alpha mask: index 0 = transparent (ocean), 1 = opaque (land)."""
     height, width = len(rows), len(rows[0])
 
     def chunk(tag: bytes, data: bytes) -> bytes:
@@ -78,8 +80,8 @@ def encode_png(rows: list[bytearray]) -> bytes:
         packed += bits.to_bytes((width + 7) // 8, "big")
     return (b"\x89PNG\r\n\x1a\n"
             + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 1, 3, 0, 0, 0))
-            + chunk(b"PLTE", bytes([255, 255, 255, 255, 255, 255]))
-            + chunk(b"tRNS", bytes([255, 0]))
+            + chunk(b"PLTE", bytes([0, 0, 0, 0, 0, 0]))
+            + chunk(b"tRNS", bytes([0, 255]))
             + chunk(b"IDAT", zlib.compress(bytes(packed), 9))
             + chunk(b"IEND", b""))
 

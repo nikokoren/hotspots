@@ -8,13 +8,15 @@ recent volcanic heat. Each qualifying volcano gets one marker:
 
 Markers are plain dots for now (a volcano silhouette may come back later).
 
-- **World views** follow the approach of the [TRMNL community earthquake recipe](https://usetrmnl.com/recipes/33312):
-  a land mask on a framework grey box, re-centred on the chosen region, markers positioned in Liquid. The
-  mask is our own, generated from Natural Earth by `backend/scripts/build_world_map.py` (2048×1024, 1-bit,
-  embedded in `trmnl/src/shared.liquid`; source PNG in `trmnl/assets/world.png`).
+Both map kinds use the TRMNL framework map's **native colours** (its `map-land` and `map-water` slots:
+white land and a dark water dither on 1-bit, greys on 4-bit, theme and dark-mode aware).
+
+- **World views:** the whole globe re-centred on the chosen region. The map box is painted with
+  `map-water`, and a strip painted with `map-land` is masked to the land by our own world mask, generated
+  from Natural Earth by `backend/scripts/build_world_map.py` (2048×1024, 1-bit, embedded in
+  `trmnl/src/shared.liquid`; source PNG in `trmnl/assets/world.png`). Markers are positioned in Liquid.
 - **Close-ups** use the TRMNL framework map ([`TRMNLMaps`](https://trmnl.com/framework/docs/3.4/map):
-  MapLibre over TRMNL's OpenStreetMap tiles), repainted to the same grey land / white sea, with markers
-  projected in the browser.
+  MapLibre over TRMNL's OpenStreetMap tiles), coast and water only, with markers projected in the browser.
 
 Both render natively on every TRMNL panel (1-bit to 16 greys, OG to X).
 

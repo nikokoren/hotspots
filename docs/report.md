@@ -11,9 +11,9 @@
 | Distribution | Public recipe. All installs poll one shared `latest.json`; nobody hits NASA but us. |
 | Devices | All TRMNL panels. Map drawn in Liquid with framework classes (approach of the TRMNL earthquake recipe), so the framework handles 1-bit dithering through 16 greys and OG through X sizes. |
 | Size vs age | Size = activity only; age shown only through shade. |
-| Fade | Black ≤ 24 h, then `bg--gray-20/30/40/50` in 12 h steps, hidden after 72 h. Land is `bg--gray-70`, so the faintest marker stays darker than land. |
+| Fade | Black ≤ 24 h, then `bg--gray-20/30/40/50` in 12 h steps, hidden after 72 h. Each dot has a white halo so it reads on both the white land and the dark water. |
 | Labels | Boolean setting, off by default; labels up to 5 of the most recently observed volcanoes, placed to avoid overlaps. |
-| Map | One "Map" setting. 4 *World – centred on …* views (Europe & Africa default, Americas, Asia & Australia, Pacific): 2:1 equirectangular, our own Natural Earth world mask (approach of the earthquake recipe) re-centred. 8 *Close-up – …* views: TRMNL framework map (`TRMNLMaps`, Web Mercator, OSM tiles from TRMNL), coast and water only, repainted grey land / white sea, whole-number zoom fitted to the region box. |
+| Map | One "Map" setting. 4 *World – centred on …* views (Europe & Africa default, Americas, Asia & Australia, Pacific): 2:1 equirectangular, our own Natural Earth world mask re-centred, coloured with the framework map's native map-land / map-water slots. 8 *Close-up – …* views: TRMNL framework map (`TRMNLMaps`, Web Mercator, OSM tiles from TRMNL), coast and water only in the framework's native colours, whole-number zoom fitted to the region box. |
 | Markers | Dots for now (diameter by activity, shade by age, white halo); world views positioned in Liquid, close-ups projected with MapLibre in the browser. |
 
 ## Endpoints and credentials

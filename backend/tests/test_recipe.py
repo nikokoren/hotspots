@@ -30,7 +30,9 @@ def site(tmp_path_factory):
 @pytest.mark.parametrize("layout", ["full", "half_horizontal", "half_vertical", "quadrant"])
 def test_layouts_render(site, layout):
     html = preview.render(site, layout, "world-pacific", labels=True, device="og_png")
-    assert 'class="hs-map' in html and 'class="hs-strip" style="left: -44.444%; background-image: url(data:image/png;base64,iVBOR' in html
+    assert 'id="hs-world" class="hs-map" data-map-slot="map-water"' in html
+    assert ('class="hs-strip" data-map-slot="map-land" style="left: -44.444%; '
+            '--hs-mask: url(data:image/png;base64,iVBOR') in html
     assert html.count('class="hs-v"') == 2
     assert ">Kilauea<" in html  # labels on
     assert "Liquid" not in html and "{{" not in html and "{%" not in html
@@ -49,7 +51,7 @@ def test_closeup_uses_framework_map(site):
 
 def test_unset_region_falls_back_to_europe_world(site):
     html = preview.render(site, "full", "", labels=False, device="og_png")
-    assert 'class="hs-strip" style="left: -4.167%;' in html
+    assert 'data-map-slot="map-land" style="left: -4.167%;' in html
 
 
 def test_payload_under_trmnl_limit(site):
@@ -70,10 +72,16 @@ def test_embedded_world_map_matches_build_script():
     assert embedded[16:24] == (2048).to_bytes(4, "big") + (1024).to_bytes(4, "big")
 
 
-def test_world_and_closeup_use_the_same_land_and_sea_paint():
-    """Both map kinds must paint land gray-70 and sea white, with no per-bit-depth overrides."""
+def test_world_and_closeup_use_the_native_map_colours():
+    """Both map kinds take land and water from the framework map slots, never fixed greys."""
     shared = (SCRIPT.parents[2] / "trmnl" / "src" / "shared.liquid").read_text()
-    assert '<div class="hs-map bg--gray-70">' in shared              # world: land shows through the mask
-    assert 'paint(opts.style, "background", "gray-70")' in shared     # close-up: land
-    assert 'paint(opts.style, "fill", "white")' in shared             # close-up: sea (world mask is white)
-    assert "bit:bg--gray" not in shared
+    assert 'data-map-slot="map-water"' in shared and 'data-map-slot="map-land"' in shared   # world
+    assert "TRMNLMaps.applySwatches" in shared
+    assert 'preset: "outline"' in shared and "l.paint =" not in shared   # close-up: preset paint kept
+    assert "bg--gray-70" not in shared
+
+
+def test_world_mask_is_opaque_land_transparent_ocean():
+    png = (SCRIPT.parents[2] / "trmnl" / "assets" / "world.png").read_bytes()
+    i = png.index(b"tRNS")
+    assert png[i + 4:i + 6] == bytes([0, 255])  # index 0 (ocean) transparent, 1 (land) opaque
