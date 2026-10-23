@@ -6,7 +6,7 @@ recent volcanic heat. Each qualifying volcano gets one marker:
 - **size** shows relative observed thermal activity (NASA FIRMS VIIRS fire radiative power, log scale);
 - **shade** shows the age of the latest observation: black ≤ 24 h, then four lighter TRMNL greys until 72 h, then hidden.
 
-Markers are plain dots for now (a volcano silhouette may come back later).
+Markers are a plain volcano silhouette (no smoke or lava, since a heat signal is not a confirmed eruption); the same shape is the recipe icon.
 
 Both map kinds use the TRMNL framework map's **native colours** (its `map-land` and `map-water` slots:
 white land and a dark water dither on 1-bit, greys on 4-bit, theme and dark-mode aware).
@@ -31,13 +31,13 @@ results: [`docs/report.md`](docs/report.md).
 ```
 GitHub Actions (daily)                     GitHub Pages                 TRMNL (every install)
   FIRMS VIIRS 7-day CSV ─┐                   latest.json  ◄─── polling ─── recipe: world image or
-  GVP volcano catalogue ─┴─► hotspots run ─► diagnostics.json             TRMNLMaps close-up + dots
+  GVP volcano catalogue ─┴─► hotspots run ─► diagnostics.json             TRMNLMaps close-up + icons
                                              catalogue.json
 ```
 
 Only the GitHub Actions job contacts NASA and the Smithsonian; every recipe install reads that shared
-output. `latest.json` (~13 KB, under TRMNL's 100 KB limit) carries the ranked markers (lat/lon, dot
-diameter as % of map width, grey class) plus, for world views, pre-computed positions and label sides. If the FIRMS fetch fails,
+output. `latest.json` (~13 KB, under TRMNL's 100 KB limit) carries the ranked markers (lat/lon, icon
+width as % of map width, grey class) plus, for world views, pre-computed positions and label sides. If the FIRMS fetch fails,
 nothing is deployed and the previous data stays up unchanged.
 
 ## Layout

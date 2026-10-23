@@ -1,6 +1,6 @@
 """Marker encoding for the recipe.
 
-Dot diameter is a percentage of the map width and the shade is a TRMNL
+Icon width is a percentage of the map width and the shade is a TRMNL
 background class, so the same payload scales to every screen and layout.
 World views also get positions (percent of the 2:1 map box) and label sides
 here; close-ups are projected and labelled in the browser by the framework map.
@@ -11,7 +11,7 @@ from __future__ import annotations
 from hotspots.models import Marker
 from hotspots.render.views import Frame, View
 
-ICON_ASPECT = 1.0          # icon width / height (dot for now; 1.5 for the volcano silhouette)
+ICON_ASPECT = 1.5          # icon width / height (volcano silhouette)
 LABEL_CHAR_PCT = 0.95      # approx. label character width, % of map width
 LABEL_HEIGHT_PCT = 3.6     # approx. label height, % of map height
 

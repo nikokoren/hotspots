@@ -6,7 +6,7 @@
     markers: [ { n, lat, lon, w, c, a } ]            ranked; used by close-up views
     views: { <key>: { label, world: true,  shift, markers: [ { n, x, y, w, c, a, l } ] }
            | { label, world: false, bbox: [west, south, east, north] } }
-      w  dot diameter, % of map width      c  TRMNL background class (age)
+      w  icon width, % of map width      c  TRMNL background class (age)
       x, y  world position, % of the 2:1 box   l  label side r/l/t/b ("" = none)
       shift  % to slide the tiled world image so the chosen meridian is centred
 
@@ -23,9 +23,9 @@
   .hs-strip { position: absolute; top: 0; height: 100%; width: 200%;
     -webkit-mask-image: var(--hs-mask); mask-image: var(--hs-mask);
     -webkit-mask-size: 50% 100%; mask-size: 50% 100%; -webkit-mask-repeat: repeat-x; mask-repeat: repeat-x; }
-  .hs-v { position: absolute; aspect-ratio: 1 / 1; transform: translate(-50%, -50%); z-index: 3; }
-  .hs-v > i { position: absolute; inset: 0; border-radius: 50%; }
-  .hs-v > i.hs-halo { inset: -22%; }
+  .hs-v { position: absolute; aspect-ratio: 3 / 2; transform: translate(-50%, -50%); z-index: 3; }
+  .hs-v > i { position: absolute; inset: 0; clip-path: polygon(0% 100%, 34% 0%, 43.5% 13.6%, 50% 1.5%, 56.5% 13.6%, 66% 0%, 100% 100%); }
+  .hs-v > i.hs-halo { inset: -22% -16% -10% -16%; }
   .hs-l { position: absolute; white-space: nowrap; line-height: 1; }
   .hs-l--r { left: 100%; top: 50%; transform: translateY(-50%); margin-left: 3px; }
   .hs-l--l { right: 100%; top: 50%; transform: translateY(-50%); margin-right: 3px; }
@@ -34,15 +34,8 @@
 </style>
 {% template volcano_icon %}
 <svg width="24px" height="24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <g stroke="white" stroke-width="3" stroke-linejoin="round" fill="white">
-    <path d="M1.5 23 L8.6 11.2 L10.4 12.6 L12 11.4 L13.6 12.6 L15.4 11.2 L22.5 23 Z"/>
-    <path d="M8.2 8.6a2.4 2.4 0 0 1 2.2-3.4a3.1 3.1 0 0 1 5.6-.4a2.3 2.3 0 0 1 1.6 4.1a2 2 0 0 1-2.8 1.3a2.4 2.4 0 0 1-3.9 .2a2.1 2.1 0 0 1-2.7-1.8z"/>
-    <circle cx="6.3" cy="10.2" r="0.9"/><circle cx="18.1" cy="10.6" r="0.9"/><circle cx="5" cy="13" r="0.7"/>
-  </g>
-  <path d="M1.5 23 L8.6 11.2 L10.4 12.6 L12 11.4 L13.6 12.6 L15.4 11.2 L22.5 23 Z"/>
-  <path d="M8.2 8.6a2.4 2.4 0 0 1 2.2-3.4a3.1 3.1 0 0 1 5.6-.4a2.3 2.3 0 0 1 1.6 4.1a2 2 0 0 1-2.8 1.3a2.4 2.4 0 0 1-3.9 .2a2.1 2.1 0 0 1-2.7-1.8z"/>
-  <path d="M10.6 13.4 L9.4 17 L10.3 19.6 M13.6 13.2 L14.8 16.4 L14 20.2" fill="none" stroke="white" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="6.3" cy="10.2" r="0.9"/><circle cx="18.1" cy="10.6" r="0.9"/><circle cx="5" cy="13" r="0.7"/>
+  <path d="M1 21 L8.5 6.5 L10.6 9 L12 6.8 L13.4 9 L15.5 6.5 L23 21 Z" stroke="white" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M1 21 L8.5 6.5 L10.6 9 L12 6.8 L13.4 9 L15.5 6.5 L23 21 Z"/>
 </svg>
 {% endtemplate %}
 {% template volcano_world %}
@@ -98,7 +91,7 @@
 
     function overlaps(a, b) { return a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]; }
 
-    // Markers are our own markup over the map: dot size and shade come from the payload.
+    // Markers are our own markup over the map: icon size and shade come from the payload.
     function place(map) {
       var box = document.getElementById(el);
       Array.prototype.forEach.call(box.querySelectorAll(".hs-v"), function (n) { n.remove(); });
@@ -115,10 +108,10 @@
         v.style.width = Math.round(d) + "px";
         v.innerHTML = '<i class="hs-halo bg--white"></i><i class="' + m.c + '"></i>';
         box.appendChild(v);
-        shown.push({ m: m, v: v, x: pt.x, y: pt.y, r: d / 2 });
+        shown.push({ m: m, v: v, x: pt.x, y: pt.y, hw: d / 2, hh: d / 3 });  // silhouette is 3:2
       });
       if (!showLabels) return;
-      var taken = shown.map(function (s) { return [s.x - s.r, s.y - s.r, s.x + s.r, s.y + s.r]; });
+      var taken = shown.map(function (s) { return [s.x - s.hw, s.y - s.hh, s.x + s.hw, s.y + s.hh]; });
       shown.slice().sort(function (a, b) { return a.m.a - b.m.a; }).slice(0, maxLabels).forEach(function (s) {
         var span = document.createElement("span");
         span.className = "hs-l label label--small text-stroke";
@@ -126,10 +119,10 @@
         s.v.appendChild(span);
         var tw = span.offsetWidth, th = span.offsetHeight, g = 3;
         var options = {
-          r: [s.x + s.r + g, s.y - th / 2, s.x + s.r + g + tw, s.y + th / 2],
-          l: [s.x - s.r - g - tw, s.y - th / 2, s.x - s.r - g, s.y + th / 2],
-          t: [s.x - tw / 2, s.y - s.r - g - th, s.x + tw / 2, s.y - s.r - g],
-          b: [s.x - tw / 2, s.y + s.r + g, s.x + tw / 2, s.y + s.r + g + th]
+          r: [s.x + s.hw + g, s.y - th / 2, s.x + s.hw + g + tw, s.y + th / 2],
+          l: [s.x - s.hw - g - tw, s.y - th / 2, s.x - s.hw - g, s.y + th / 2],
+          t: [s.x - tw / 2, s.y - s.hh - g - th, s.x + tw / 2, s.y - s.hh - g],
+          b: [s.x - tw / 2, s.y + s.hh + g, s.x + tw / 2, s.y + s.hh + g + th]
         };
         var side = Object.keys(options).find(function (k) {
           var b = options[k];
