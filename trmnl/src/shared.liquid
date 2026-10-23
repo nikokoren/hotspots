@@ -79,7 +79,6 @@
     var showLabels = {{ show_labels | json }};
     var maxLabels = {{ max_labels | json }};
     var mapScale = {{ map_scale | json }};
-    var KEEP = ["background", "ocean", "water"];
 
     function whenReady(cb) {
       var tries = 0;
@@ -138,11 +137,10 @@
     whenReady(function () {
       TRMNLMaps.watch(el, function () {
         var opts = TRMNLMaps.options({
-          el: el, preset: "outline", tiles: "trmnl", labels: false,
+          el: el, preset: "outline", tiles: "trmnl",
           center: [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2], zoom: 3
         });
-        // Coast and water only, in the framework's native map colours.
-        opts.style.layers = opts.style.layers.filter(function (l) { return KEEP.indexOf(l.id) >= 0; });
+        // The framework's outline preset as-is: coast, water, borders, main roads and big names.
         opts.renderWorldCopies = true;
         var map = new maplibregl.Map(opts);
         // Zoom stays on whole numbers so dither lands on the pixel grid. Round up when the
