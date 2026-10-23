@@ -32,7 +32,7 @@
 ## Data freshness
 
 - The file was regenerated within ~3 h of the latest acquisition. S-NPP passes each point roughly twice a day (≈01:30 and 13:30 local), so any one volcano is observed about every 12 h when skies are clear.
-- `latest.json` records `generated_at` (run time) and `data_as_of` (newest FIRMS acquisition). The recipe shows the second and adds "stale" if the run is more than 36 h old.
+- `latest.json` records `generated_at` (run time) and `data_as_of` (newest FIRMS acquisition). Neither is shown on the screen.
 - Failure policy: if FIRMS fails, the job fails and nothing is deployed, so Pages keeps serving the previous maps unchanged. Markers are never re-aged or removed by a failed fetch. If GVP fails, the run falls back to the previously published `catalogue.json`.
 
 ## Filtering and activity score

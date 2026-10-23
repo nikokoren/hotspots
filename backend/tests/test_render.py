@@ -81,12 +81,12 @@ def test_isolated_label_sits_next_to_icon():
 
 
 def test_crowded_labels_get_leader_lines_and_never_overlap():
-    from hotspots.render.labels import _line_hits_boxes, _overlaps, place
+    from hotspots.render.labels import GAP, _line_hits_boxes, _overlaps, place
     # A tight cluster: adjacent spots are blocked by neighbouring icons.
     icons = [{"x": 50 + dx, "y": 25 + dy, "box": (48.5 + dx, 24 + dy, 51.5 + dx, 26 + dy), "n": f"Volcano{k}", "a": k}
              for k, (dx, dy) in enumerate([(0, 0), (3, 0), (-3, 0), (0, 2), (0, -2), (3, 2), (-3, -2)])]
     labels = place(icons, 7, char_w=1, text_h=2)
-    assert len(labels) >= 4
+    assert len(labels) == 7
     assert any(lb["ld"] for lb in labels)  # some needed a leader
     icon_boxes = [c["box"] for c in icons]
     rects = []
@@ -99,7 +99,9 @@ def test_crowded_labels_get_leader_lines_and_never_overlap():
         assert not any(_overlaps(r, o) for j, o in enumerate(rects) if j != k)
     for lb in labels:
         if lb["ld"]:
-            others = [b for j, b in enumerate(icon_boxes) if j != lb["i"]]
+            own = icon_boxes[lb["i"]]
+            near = (own[0] - GAP, own[1] - GAP, own[2] + GAP, own[3] + GAP)
+            others = [b for j, b in enumerate(icon_boxes) if j != lb["i"] and not _overlaps(b, near)]
             assert not _line_hits_boxes(lb["ld"], others)
 
 
@@ -107,3 +109,15 @@ def test_shade_classes():
     assert shade_class(0, SHADES) == "bg--black"
     assert shade_class(1, SHADES) == "bg--gray-20"
     assert shade_class(4, SHADES) == "bg--gray-50"
+
+
+def test_buried_icon_gets_a_short_leader():
+    from hotspots.render.labels import place
+    # A small icon under two bigger ones (Purace under Reventador and Sangay).
+    icons = [{"x": 24.1, "y": 25.6, "box": (22.6, 24.2, 25.6, 26.7), "n": "Sangay", "a": 30},
+             {"x": 24.3, "y": 25.0, "box": (22.8, 23.7, 25.7, 26.1), "n": "Reventador", "a": 4.6},
+             {"x": 24.6, "y": 24.4, "box": (23.7, 23.6, 25.5, 25.1), "n": "Purace", "a": 4.7}]
+    labels = {icons[lb["i"]]["n"]: lb for lb in place(icons, 3, char_w=0.95, text_h=1.8)}
+    if labels["Purace"]["ld"]:
+        x1, y1, x2, y2 = labels["Purace"]["ld"]
+        assert ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5 <= 4
