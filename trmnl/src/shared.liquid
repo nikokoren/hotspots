@@ -4,11 +4,13 @@
   Polled payload (latest.json, published daily by GitHub Actions):
     generated_at, data_as_of, version, default_view, max_labels,
     markers: [ { n, lat, lon, w, c, a } ]            ranked; used by close-up views
-    views: { <key>: { label, world: true,  shift, markers: [ { n, x, y, w, c, a, l } ] }
+    views: { <key>: { label, world: true,  shift, markers: [ { n, x, y, w, c, a } ],
+                      labels: [ { t, x, y, a: start|end|middle, ld: [x1, y1, x2, y2] | null } ] }
            | { label, world: false, bbox: [west, south, east, north] } }
       w  icon width, % of map width      c  TRMNL background class (age)
-      x, y  world position, % of the 2:1 box   l  label side r/l/t/b ("" = none)
+      x, y  world position, % of the 2:1 box
       shift  % to slide the tiled world image so the chosen meridian is centred
+      labels: x, y and leader lines in map-width units (x 0..100, y 0..50); see render/labels.py
 
   World views: a land mask (white ocean, transparent land) on a framework grey box, the
   approach of the TRMNL community earthquake recipe (https://usetrmnl.com/recipes/33312).
@@ -26,11 +28,13 @@
   .hs-v { position: absolute; aspect-ratio: 3 / 2; transform: translate(-50%, -50%); z-index: 3; }
   .hs-v > i { position: absolute; inset: 0; clip-path: polygon(0% 100%, 34% 0%, 43.5% 13.6%, 50% 1.5%, 56.5% 13.6%, 66% 0%, 100% 100%); }
   .hs-v > i.hs-halo { inset: -22% -16% -10% -16%; }
-  .hs-l { position: absolute; white-space: nowrap; line-height: 1; }
-  .hs-l--r { left: 100%; top: 50%; transform: translateY(-50%); margin-left: 3px; }
-  .hs-l--l { right: 100%; top: 50%; transform: translateY(-50%); margin-right: 3px; }
-  .hs-l--t { bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 2px; }
-  .hs-l--b { top: 100%; left: 50%; transform: translateX(-50%); margin-top: 2px; }
+  .hs-l { position: absolute; white-space: nowrap; line-height: 1; z-index: 4; transform: translateY(-50%); }
+  .hs-l--end { transform: translate(-100%, -50%); }
+  .hs-l--middle { transform: translate(-50%, -50%); }
+  .hs-lines { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+  .hs-lines line { vector-effect: non-scaling-stroke; stroke-linecap: round; }
+  .hs-lines .hs-lc { stroke: #fff; stroke-width: 3px; }
+  .hs-lines .hs-ln { stroke: #000; stroke-width: 1px; }
 </style>
 {% template volcano_icon %}
 <svg width="24px" height="24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -47,9 +51,17 @@
     <div class="hs-v" style="left: {{ m.x }}%; top: {{ m.y }}%; width: {{ w }}%;">
       <i class="hs-halo bg--white"></i>
       <i class="{{ m.c }}"></i>
-      {% if show_labels and m.l != "" %}<span class="hs-l hs-l--{{ m.l }} label label--small text-stroke">{{ m.n }}</span>{% endif %}
     </div>
   {% endfor %}
+  {% if show_labels %}
+    <svg class="hs-lines" viewBox="0 0 100 50" preserveAspectRatio="none">
+      {% for l in view.labels %}{% if l.ld %}<line class="hs-lc" x1="{{ l.ld[0] }}" y1="{{ l.ld[1] }}" x2="{{ l.ld[2] }}" y2="{{ l.ld[3] }}"/><line class="hs-ln" x1="{{ l.ld[0] }}" y1="{{ l.ld[1] }}" x2="{{ l.ld[2] }}" y2="{{ l.ld[3] }}"/>{% endif %}{% endfor %}
+    </svg>
+    {% for l in view.labels %}
+      {% assign ly = l.y | times: 2 %}
+      <span class="hs-l hs-l--{{ l.a }} label label--small text-stroke" style="left: {{ l.x }}%; top: {{ ly }}%;">{{ l.t }}</span>
+    {% endfor %}
+  {% endif %}
 </div>
 <script type="text/javascript">
   // Paint the map-water / map-land slots exactly as the framework map does (dither on
@@ -94,7 +106,7 @@
     // Markers are our own markup over the map: icon size and shade come from the payload.
     function place(map) {
       var box = document.getElementById(el);
-      Array.prototype.forEach.call(box.querySelectorAll(".hs-v"), function (n) { n.remove(); });
+      Array.prototype.forEach.call(box.querySelectorAll(".hs-v, .hs-l, .hs-lines"), function (n) { n.remove(); });
       var W = box.clientWidth, H = box.clientHeight, c = map.getCenter().lng, shown = [];
       markers.forEach(function (m) {
         var lon = c + ((m.lon - c + 540) % 360) - 180;  // nearest world copy
@@ -110,28 +122,83 @@
         box.appendChild(v);
         shown.push({ m: m, v: v, x: pt.x, y: pt.y, hw: d / 2, hh: d / 3 });  // silhouette is 3:2
       });
-      if (!showLabels) return;
-      var taken = shown.map(function (s) { return [s.x - s.hw, s.y - s.hh, s.x + s.hw, s.y + s.hh]; });
-      shown.slice().sort(function (a, b) { return a.m.a - b.m.a; }).slice(0, maxLabels).forEach(function (s) {
-        var span = document.createElement("span");
-        span.className = "hs-l label label--small text-stroke";
-        span.textContent = s.m.n;
-        s.v.appendChild(span);
-        var tw = span.offsetWidth, th = span.offsetHeight, g = 3;
-        var options = {
-          r: [s.x + s.hw + g, s.y - th / 2, s.x + s.hw + g + tw, s.y + th / 2],
-          l: [s.x - s.hw - g - tw, s.y - th / 2, s.x - s.hw - g, s.y + th / 2],
-          t: [s.x - tw / 2, s.y - s.hh - g - th, s.x + tw / 2, s.y - s.hh - g],
-          b: [s.x - tw / 2, s.y + s.hh + g, s.x + tw / 2, s.y + s.hh + g + th]
-        };
-        var side = Object.keys(options).find(function (k) {
-          var b = options[k];
-          return b[0] >= 0 && b[1] >= 0 && b[2] <= W && b[3] <= H && !taken.some(function (t) { return overlaps(b, t); });
+      if (showLabels) placeLabels(box, W, H, shown);
+    }
+
+    // Labels with leader lines, mirroring backend/src/hotspots/render/labels.py (in px):
+    // next to the icon if free, else out along one of eight directions with a line back
+    // to the icon (never through another icon or label), else dropped. Newest first.
+    var ANGLES = [0, 180, -45, -135, 45, 135, -90, 90];
+    function inside(px, py, b) { return b[0] < px && px < b[2] && b[1] < py && py < b[3]; }
+    function lineHits(ln, bs) {
+      for (var k = 1; k <= 12; k++) {
+        var t = k / 13, px = ln[0] + (ln[2] - ln[0]) * t, py = ln[1] + (ln[3] - ln[1]) * t;
+        for (var j = 0; j < bs.length; j++) if (inside(px, py, bs[j])) return true;
+      }
+      return false;
+    }
+    function placeLabels(box, W, H, shown) {
+      var boxes = shown.map(function (s) { return [s.x - s.hw, s.y - s.hh, s.x + s.hw, s.y + s.hh]; });
+      var nIcons = boxes.length, lines = [], g = 3, steps = [0.04, 0.07, 0.10].map(function (f) { return f * W; });
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", "hs-lines");
+      svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+      box.appendChild(svg);
+      shown.map(function (s, i) { return i; })
+        .sort(function (a, b) { return shown[a].m.a - shown[b].m.a || shown[b].hw - shown[a].hw; })
+        .slice(0, maxLabels)
+        .forEach(function (i) {
+          var s = shown[i], x = s.x, y = s.y, hw = s.hw, hh = s.hh;
+          var span = document.createElement("span");
+          span.className = "hs-l label label--small text-stroke";
+          span.textContent = s.m.n;
+          box.appendChild(span);
+          var tw = span.offsetWidth, th = span.offsetHeight;
+          var others = boxes.filter(function (_, j) { return j !== i; });
+          function fits(b) {
+            return b[0] >= 0 && b[1] >= 0 && b[2] <= W && b[3] <= H &&
+              !boxes.some(function (o) { return overlaps(b, o); }) &&
+              !lines.some(function (ln) { return lineHits(ln, [b]); });
+          }
+          function rectFor(anchor, ex, ey, vertical) {
+            if (anchor === "start") return [ex, ey - th / 2, ex + tw, ey + th / 2];
+            if (anchor === "end") return [ex - tw, ey - th / 2, ex, ey + th / 2];
+            return vertical < 0 ? [ex - tw / 2, ey - th, ex + tw / 2, ey] : [ex - tw / 2, ey, ex + tw / 2, ey + th];
+          }
+          var pick = null;
+          [["start", x + hw + g, y, 0], ["end", x - hw - g, y, 0], ["middle", x, y - hh - g, -1], ["middle", x, y + hh + g, 1]]
+            .some(function (o) {
+              var r = rectFor(o[0], o[1], o[2], o[3]);
+              if (fits(r)) { pick = { a: o[0], r: r, ln: null }; return true; }
+              return false;
+            });
+          for (var si = 0; !pick && si < steps.length; si++) {
+            for (var ai = 0; !pick && ai < ANGLES.length; ai++) {
+              var rad = ANGLES[ai] * Math.PI / 180, dx = Math.cos(rad), dy = Math.sin(rad);
+              var r0 = Math.min(Math.abs(dx) > 1e-9 ? hw / Math.abs(dx) : Infinity, Math.abs(dy) > 1e-9 ? hh / Math.abs(dy) : Infinity);
+              var ex = x + dx * (r0 + steps[si]), ey = y + dy * (r0 + steps[si]);
+              var a = dx > 0.3 ? "start" : dx < -0.3 ? "end" : "middle";
+              var r = rectFor(a, ex, ey, dy);
+              var ln = [x + dx * r0, y + dy * r0, ex, ey];
+              if (fits(r) && !lineHits(ln, others.concat(boxes.slice(nIcons)))) pick = { a: a, r: r, ln: ln };
+            }
+          }
+          if (!pick) { span.remove(); return; }
+          boxes.push(pick.r);
+          span.classList.add("hs-l--" + pick.a);
+          span.style.left = Math.round(pick.a === "start" ? pick.r[0] : pick.a === "end" ? pick.r[2] : (pick.r[0] + pick.r[2]) / 2) + "px";
+          span.style.top = Math.round((pick.r[1] + pick.r[3]) / 2) + "px";
+          if (pick.ln) {
+            lines.push(pick.ln);
+            ["hs-lc", "hs-ln"].forEach(function (cls) {
+              var l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+              l.setAttribute("class", cls);
+              l.setAttribute("x1", pick.ln[0]); l.setAttribute("y1", pick.ln[1]);
+              l.setAttribute("x2", pick.ln[2]); l.setAttribute("y2", pick.ln[3]);
+              svg.appendChild(l);
+            });
+          }
         });
-        if (!side) { span.remove(); return; }
-        taken.push(options[side]);
-        span.classList.add("hs-l--" + side);
-      });
     }
 
     whenReady(function () {

@@ -44,9 +44,9 @@ def test_closeup_boxes_are_sane():
 def test_view_markers_filter_limit_and_order():
     markers = [_marker("Etna", 37.75, 15.0, 0.2), _marker("Kilauea", 19.4, -155.3, 0.8),
                _marker("Stromboli", 38.79, 15.21, 0.5)]
-    world = view_markers(markers, VIEWS_BY_KEY["world-pacific"], min_pct=1, max_pct=5,
-                         max_markers=2, max_labels=0, shades=SHADES)
-    assert len(world) == 2 and all(e["l"] == "" for e in world)
+    world, labels = view_markers(markers, VIEWS_BY_KEY["world-pacific"], min_pct=1, max_pct=5,
+                                 max_markers=2, max_labels=0, shades=SHADES)
+    assert len(world) == 2 and labels == []
 
 
 def test_marker_list_for_closeups():
@@ -55,13 +55,42 @@ def test_marker_list_for_closeups():
     assert out == [{"n": "Etna", "lat": 37.75, "lon": 15.0, "w": 2.0, "c": "bg--gray-30", "a": 1.0}]
 
 
-def test_labels_do_not_overlap_and_respect_limit():
+def test_labels_respect_limit_newest_first():
     markers = [_marker(f"V{i}", 0.0, 100.0 + i * 0.2, 0.5, age=i) for i in range(6)]
-    out = view_markers(markers, VIEWS_BY_KEY["world-asia"], min_pct=1, max_pct=5,
-                       max_markers=30, max_labels=3, shades=SHADES)
-    labelled = [e for e in out if e["l"]]
-    assert 1 <= len(labelled) <= 3
-    assert labelled[0]["a"] == min(e["a"] for e in labelled)
+    _, labels = view_markers(markers, VIEWS_BY_KEY["world-asia"], min_pct=1, max_pct=5,
+                             max_markers=30, max_labels=3, shades=SHADES)
+    assert 1 <= len(labels) <= 3
+    assert labels[0]["t"] == "V0"
+
+
+def test_isolated_label_sits_next_to_icon():
+    from hotspots.render.labels import place
+    icons = [{"x": 50, "y": 25, "hw": 2, "hh": 1.3, "n": "Etna", "a": 1}]
+    (label,) = place(icons, 5, char_w=1, text_h=2)
+    assert label["a"] == "start" and label["ld"] is None and label["x"] > 52
+
+
+def test_crowded_labels_get_leader_lines_and_never_overlap():
+    from hotspots.render.labels import _line_hits_boxes, _overlaps, place
+    # A tight cluster: adjacent spots are blocked by neighbouring icons.
+    icons = [{"x": 50 + dx, "y": 25 + dy, "hw": 1.5, "hh": 1.0, "n": f"Volcano{k}", "a": k}
+             for k, (dx, dy) in enumerate([(0, 0), (3, 0), (-3, 0), (0, 2), (0, -2), (3, 2), (-3, -2)])]
+    labels = place(icons, 7, char_w=1, text_h=2)
+    assert len(labels) >= 4
+    assert any(lb["ld"] for lb in labels)  # some needed a leader
+    icon_boxes = [(c["x"] - c["hw"], c["y"] - c["hh"], c["x"] + c["hw"], c["y"] + c["hh"]) for c in icons]
+    rects = []
+    for lb in labels:
+        tw, th = len(icons[lb["i"]]["n"]), 2
+        x0 = {"start": lb["x"], "end": lb["x"] - tw, "middle": lb["x"] - tw / 2}[lb["a"]]
+        rects.append((x0, lb["y"] - th / 2, x0 + tw, lb["y"] + th / 2))
+    for k, r in enumerate(rects):
+        assert not any(_overlaps(r, b) for b in icon_boxes), labels[k]
+        assert not any(_overlaps(r, o) for j, o in enumerate(rects) if j != k)
+    for lb in labels:
+        if lb["ld"]:
+            others = [b for j, b in enumerate(icon_boxes) if j != lb["i"]]
+            assert not _line_hits_boxes(lb["ld"], others)
 
 
 def test_shade_classes():

@@ -101,11 +101,10 @@ def write_site(out_dir: Path, cfg: dict, markers: list[Marker], activities: list
     views = {}
     for view in VIEWS:
         if view.is_world:
-            views[view.key] = {
-                "label": view.label, "world": True, "shift": world_shift_pct(view),
-                "markers": view_markers(markers, view, max_markers=vis["max_markers"],
-                                        max_labels=vis["max_labels"], **sizing),
-            }
+            world_markers, world_labels = view_markers(markers, view, max_markers=vis["max_markers"],
+                                                       max_labels=vis["max_labels"], **sizing)
+            views[view.key] = {"label": view.label, "world": True, "shift": world_shift_pct(view),
+                               "markers": world_markers, "labels": world_labels}
         else:
             views[view.key] = {"label": view.label, "world": False,
                                "bbox": [view.lon_min, view.lat_min, view.lon_max, view.lat_max]}
