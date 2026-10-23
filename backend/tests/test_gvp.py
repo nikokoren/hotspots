@@ -55,3 +55,14 @@ def test_manual_list_ignored_when_stale(tmp_path):
     assert ids == {"1"} and meta["used"]
     ids, meta = pipeline.load_manual_eruptions(f, cat, updated + timedelta(days=15), 14, log=lambda m: None)
     assert ids == set() and meta["reason"] == "stale"
+
+
+def test_manual_list_accepts_pasted_report_table():
+    from hotspots.models import Volcano
+    from hotspots.sources.manual import parse
+    cat = [Volcano("1", "Kilauea", 19.4, -155.3), Volcano("2", "Purace", 2.3, -76.4)]
+    text = ("Name\tCountry\tVolcanic Region\tEruption Start Date\tReport Type\n"
+            "Kīlauea\tUnited States\tHawaiian-Emperor Hotspot Volcano Group\t2024 Dec 23\tContinuing Eruptive Activity\n"
+            "Puracé\tColombia\tNorthern Andean Volcanic Arc\t2025 Nov 23\tContinuing Eruptive Activity\n")
+    out = parse(text, cat)
+    assert out.ids == {"1", "2"} and out.unmatched == []

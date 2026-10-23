@@ -5,11 +5,39 @@
 # section, plus any eruptions under "New Activity/Unrest". Unrest alone (earthquakes,
 # swelling) does not belong here.
 #
-# - One volcano per line. Anything after a comma or "(" is ignored, so lines like
-#   "Dukono, Halmahera (Indonesia)" can be pasted as they are.
+# - One volcano per line. Anything after a tab, comma or "(" is ignored, so lines like
+#   "Dukono, Halmahera (Indonesia)" and rows copied from the report's table (header
+#   row included) can be pasted as they are.
 # - Names that don't match the Smithsonian catalogue are listed in the
 #   Publish maps workflow log.
 # - Committing this file republishes the map. The list is ignored once its last
 #   commit is more than 14 days old (config/defaults.toml: max_manual_age_days).
 # - Lines starting with # are ignored.
 
+Name	Country	Volcanic Region	Eruption Start Date	Report Type
+Krakatau	Indonesia	Sunda Volcanic Arc	—	New Eruptive Activity
+Nevados de Chillán	Chile	Southern Andean Volcanic Arc	—	New Eruptive Activity
+Whakaari/White Island	New Zealand	Taupo Volcanic Arc	—	New Eruptive Activity
+Ahyi	United States	Mariana Volcanic Arc	—	Continuing Eruptive Activity
+Aira	Japan	Ryukyu Volcanic Arc	2017 Mar 25	Continuing Eruptive Activity
+Great Sitkin	United States	Aleutian Ridge Volcanic Arc	2021 May 25	Continuing Eruptive Activity
+Ibu	Indonesia	Halmahera Volcanic Arc	2008 Apr 5	Continuing Eruptive Activity
+Kanlaon	Philippines	Negros-Sulu Volcanic Arc	2024 Oct 19	Continuing Eruptive Activity
+Karangetang	Indonesia	Sangihe Volcanic Arc	—	Continuing Eruptive Activity
+Kīlauea	United States	Hawaiian-Emperor Hotspot Volcano Group	2024 Dec 23	Continuing Eruptive Activity
+Lewotolok	Indonesia	Sunda Volcanic Arc	2025 Jan 16	Continuing Eruptive Activity
+Marapi	Indonesia	Sunda Volcanic Arc	2023 Dec 3	Continuing Eruptive Activity
+Mayon	Philippines	Eastern Philippine Volcanic Arc	2026 Jan 6	Continuing Eruptive Activity
+Merapi	Indonesia	Sunda Volcanic Arc	2020 Dec 31	Continuing Eruptive Activity
+Puracé	Colombia	Northern Andean Volcanic Arc	2025 Nov 23	Continuing Eruptive Activity
+Reventador	Ecuador	Northern Andean Volcanic Arc	2008 Jul 27	Continuing Eruptive Activity
+Sabancaya	Peru	Central Andean Volcanic Arc	2025 Sep 13	Continuing Eruptive Activity
+Sangay	Ecuador	Northern Andean Volcanic Arc	2019 Mar 26	Continuing Eruptive Activity
+Semeru	Indonesia	Sunda Volcanic Arc	2019 Feb 24	Continuing Eruptive Activity
+Sheveluch	Russia	Eastern Kamchatka Volcanic Arc	1999 Aug 15	Continuing Eruptive Activity
+Sinabung	Indonesia	Sunda Volcanic Arc	—	Continuing Eruptive Activity
+Suwanosejima	Japan	Ryukyu Volcanic Arc	2004 Oct 23	Continuing Eruptive Activity
+Taal	Philippines	Luzon Volcanic Arc	2024 Apr 12	Continuing Eruptive Activity
+Telica	Nicaragua	Central America Volcanic Arc	—	Continuing Eruptive Activity
+Tofua	Tonga	Tofua Volcanic Arc	2015 Oct 2	Continuing Eruptive Activity
+Tokachidake	Japan	Kuril Volcanic Arc	—	Continuing Eruptive Activity
