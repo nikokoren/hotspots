@@ -1,0 +1,10 @@
+---
+# Local preview config for trmnlp (https://github.com/usetrmnl/trmnlp)
+watch:
+  - src
+
+# Sample variables for local preview; real values come from the backend's polling JSON.
+variables:
+  trmnl:
+    plugin_settings:
+      instance_name: hotspots

@@ -1,0 +1,11 @@
+---
+name: hotspots
+strategy: polling
+polling_verb: get
+polling_url: ''        # backend JSON endpoint (TBD); must not contain the FIRMS key
+polling_headers: ''
+refresh_interval: 1440 # minutes; data refresh is ~daily (spec §5)
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
+custom_fields: []

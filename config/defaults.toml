@@ -1,0 +1,35 @@
+# Volcano Watch defaults. All values are initial hypotheses from the spec and
+# must be calibrated against real observations (docs/requirements.md §3, §8).
+
+[firms]
+product = "VIIRS_SNPP_NRT"
+area = "world"
+day_range = 3                 # FIRMS API maximum lookback used per request
+min_confidence = "nominal"    # VIIRS confidence: low | nominal | high
+request_timeout_s = 60
+max_retries = 3
+
+[catalogue]
+refresh_days = 30             # how often to re-fetch the GVP catalogue
+
+[association]
+radius_km = 10.0              # to be validated (spec §3.4)
+ambiguity_ratio = 1.5         # flag if 2nd-nearest volcano is within ratio × nearest distance
+
+[scoring]
+window_hours = 24             # rolling window for accumulated FRP
+formula = "log_accumulated_frp"
+min_frp_mw = 0.0              # qualifying threshold for individual detections
+min_accumulated_frp_mw = 0.0  # qualifying threshold per volcano (TBD)
+min_detections = 1
+
+[visual]
+min_icon_px = 8
+max_icon_px = 32
+full_opacity_hours = 24
+expire_hours = 72
+opacity_curve = "linear"
+max_markers = 30
+
+[schedule]
+refresh_interval_minutes = 1440
