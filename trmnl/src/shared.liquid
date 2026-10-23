@@ -93,10 +93,13 @@
       {% endfor %}
     {% endif %}
   </div>
-  {% comment %} Volcano list setting: newest first, in whatever space the map leaves; the framework's overflow engine drops rows that don't fit. {% endcomment %}
+  {% comment %} Volcano list setting: framework items, newest first, in whatever space the map leaves. The framework's
+     overflow engine drops rows that don't fit and adds "and N more"; columns per screen size come from the layout. {% endcomment %}
   {% if show_list %}
   <div id="hs-list" class="hs-list">
-    <div class="columns" data-overflow-max-cols="1">
+    {% assign cols_lg = list_cols_lg | default: 1 %}
+    {% assign cols_lg_portrait = cols_lg | at_most: 2 %}
+    <div class="columns" data-overflow-max-cols="1" data-overflow-max-cols-lg="{{ cols_lg }}" data-overflow-max-cols-lg-portrait="{{ cols_lg_portrait }}" data-overflow-counter="true">
       <div class="column">
       {% assign hs_now = "now" | date: "%s" | plus: 0 %}
       {% assign by_age = markers | sort: "a" %}
@@ -106,7 +109,11 @@
           <div class="icon"><span class="hs-logo hs-v--{{ m.k }}"><i class="hs-halo bg--white"></i><i class="{{ m.c }}"></i></span></div>
           <div class="content">
             <span class="title title--small">{{ m.n }}</span>
-            <span class="description">{% if m.co != "" %}{{ m.co }} · {% endif %}{% if m.k == "erupt" %}erupting{% else %}heat only{% endif %} · seen {% if age_h < 1 %}&lt;1 h{% elsif age_h < 48 %}{{ age_h }} h{% else %}{{ age_h | divided_by: 24 }} d{% endif %} ago</span>
+            {% if m.co != "" %}<span class="description">{{ m.co }}</span>{% endif %}
+            <div class="flex gap--small">
+              {% if m.k == "erupt" %}<span class="label label--small label--filled">erupting</span>{% else %}<span class="label label--small label--outline">heat only</span>{% endif %}
+              <span class="label label--small label--underline">{% if age_h < 1 %}&lt;1 h{% elsif age_h < 48 %}{{ age_h }} h{% else %}{{ age_h | divided_by: 24 }} d{% endif %} ago</span>
+            </div>
           </div>
         </div>
       {% endfor %}
@@ -126,15 +133,6 @@
       }
       if (++tries <= 200) setTimeout(attempt, 50);
     })();
-  })();
-
-  // Volcano list: one column per ~330 px of width (up to 3) so rows stay readable; the
-  // framework's overflow engine then hides rows that don't fit.
-  (function () {
-    var list = document.getElementById("hs-list");
-    if (!list) return;
-    var cols = Math.max(1, Math.min(3, Math.floor(list.clientWidth / 330)));
-    list.querySelector(".columns").setAttribute("data-overflow-max-cols", cols);
   })();
 
   // Without the volcano list, use the framework map instead where it fills the space well at a
