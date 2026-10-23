@@ -13,7 +13,7 @@
 | Size vs age | Size = activity only; age shown only through shade. |
 | Fade | Black ≤ 24 h, then `bg--gray-20/30/40/50` in 12 h steps, hidden after 72 h. Land is `bg--gray-70`, so the faintest marker stays darker than land. |
 | Labels | Boolean setting, off by default; labels up to 5 of the most recently observed volcanoes, placed to avoid overlaps. |
-| Map | One "Map" setting. 4 *World – centred on …* views (Europe & Africa default, Americas, Asia & Australia, Pacific): 2:1 equirectangular, the earthquake recipe's world image (placeholder) re-centred. 8 *Close-up – …* views: TRMNL framework map (`TRMNLMaps`, Web Mercator, OSM tiles from TRMNL), coast and water only, repainted grey land / white sea, whole-number zoom fitted to the region box. |
+| Map | One "Map" setting. 4 *World – centred on …* views (Europe & Africa default, Americas, Asia & Australia, Pacific): 2:1 equirectangular, our own Natural Earth world mask (approach of the earthquake recipe) re-centred. 8 *Close-up – …* views: TRMNL framework map (`TRMNLMaps`, Web Mercator, OSM tiles from TRMNL), coast and water only, repainted grey land / white sea, whole-number zoom fitted to the region box. |
 | Markers | Dots for now (diameter by activity, shade by age, white halo); world views positioned in Liquid, close-ups projected with MapLibre in the browser. |
 
 ## Endpoints and credentials
@@ -23,7 +23,7 @@
 | FIRMS (default) | `https://firms.modaps.eosdis.nasa.gov/data/active_fire/suomi-npp-viirs-c2/csv/SUOMI_VIIRS_C2_Global_7d.csv` (~37 MB) | none |
 | FIRMS (optional) | Area API `…/api/area/csv/{MAP_KEY}/VIIRS_SNPP_NRT/world/{days}` | `FIRMS_MAP_KEY` repo secret, used only if set |
 | GVP catalogue | WFS `GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes`, GeoJSON | none |
-| World map | Placeholder image from the TRMNL community earthquake recipe, embedded | none |
+| World map | Generated from Natural Earth 50m land (public domain) by `scripts/build_world_map.py`, embedded | none |
 | Close-up map | TRMNL framework map: `trmnl.com/js/maplibre-gl/5.24.0`, tiles from TRMNL (`tiles: "trmnl"`) | none |
 
 **Finding:** FIRMS publishes keyless global files (24 h / 48 h / 7 d) for S-NPP, NOAA-20 and NOAA-21. That removes the need for an API key and covers the 72 h window in one request. The key path is kept as a fallback.

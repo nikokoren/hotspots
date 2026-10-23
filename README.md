@@ -8,9 +8,10 @@ recent volcanic heat. Each qualifying volcano gets one marker:
 
 Markers are plain dots for now (a volcano silhouette may come back later).
 
-- **World views** follow the [TRMNL community earthquake recipe](https://usetrmnl.com/recipes/33312): a
-  land mask on a framework grey box, re-centred on the chosen region, markers positioned in Liquid. The
-  world image is that recipe's, as a **placeholder** until we have our own.
+- **World views** follow the approach of the [TRMNL community earthquake recipe](https://usetrmnl.com/recipes/33312):
+  a land mask on a framework grey box, re-centred on the chosen region, markers positioned in Liquid. The
+  mask is our own, generated from Natural Earth by `backend/scripts/build_world_map.py` (2048×1024, 1-bit,
+  embedded in `trmnl/src/shared.liquid`; source PNG in `trmnl/assets/world.png`).
 - **Close-ups** use the TRMNL framework map ([`TRMNLMaps`](https://trmnl.com/framework/docs/3.4/map):
   MapLibre over TRMNL's OpenStreetMap tiles), repainted to the same grey land / white sea, with markers
   projected in the browser.
@@ -47,7 +48,7 @@ backend/src/hotspots/
   render/views.py                      map views: world frames + re-centring shift, close-up boxes
   render/layout.py                     marker sizes and shades; world-view positions and label sides
   pipeline.py, cache.py, cli.py
-backend/scripts/                       basemap builder, calibration sweep, Liquid preview
+backend/scripts/                       world map builder, calibration sweep, Liquid preview
 config/defaults.toml                   all thresholds
 trmnl/src/                             recipe: settings.yml + Liquid layouts
 .github/workflows/                     publish (daily → Pages), CI (tests)
@@ -92,5 +93,4 @@ python -m http.server   # open it over http://, so the framework JS, fonts and m
 - NASA FIRMS: VIIRS S-NPP NRT active fire / thermal anomaly data (LANCE). https://firms.modaps.eosdis.nasa.gov/
 - Global Volcanism Program, Smithsonian Institution: Volcanoes of the World database. https://volcano.si.edu/
 - Close-up maps: © OpenStreetMap contributors (ODbL), tiles and styling by the TRMNL framework.
-- World map image: **placeholder** from the TRMNL community earthquake recipe
-  (https://usetrmnl.com/recipes/33312); licence not stated, to be replaced before publishing.
+- World map: generated from Natural Earth land polygons, public domain. https://www.naturalearthdata.com/

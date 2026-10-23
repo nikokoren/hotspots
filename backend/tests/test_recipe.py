@@ -30,8 +30,7 @@ def site(tmp_path_factory):
 @pytest.mark.parametrize("layout", ["full", "half_horizontal", "half_vertical", "quadrant"])
 def test_layouts_render(site, layout):
     html = preview.render(site, layout, "world-pacific", labels=True, device="og_png")
-    assert 'class="hs-map' in html and 'class="hs-strip" style="left: -44.444%;"' in html
-    assert html.count("data:image/png;base64,iVBOR") == 2  # tiled world image
+    assert 'class="hs-map' in html and 'class="hs-strip" style="left: -44.444%; background-image: url(data:image/png;base64,iVBOR' in html
     assert html.count('class="hs-v"') == 2
     assert ">Kilauea<" in html  # labels on
     assert "Liquid" not in html and "{{" not in html and "{%" not in html
@@ -50,7 +49,7 @@ def test_closeup_uses_framework_map(site):
 
 def test_unset_region_falls_back_to_europe_world(site):
     html = preview.render(site, "full", "", labels=False, device="og_png")
-    assert 'class="hs-strip" style="left: -4.167%;"' in html
+    assert 'class="hs-strip" style="left: -4.167%;' in html
 
 
 def test_payload_under_trmnl_limit(site):
@@ -59,3 +58,13 @@ def test_payload_under_trmnl_limit(site):
     assert set(payload["views"]) >= {"world-europe", "world-pacific", "europe"}
     assert payload["default_view"] == "world-europe"
     assert not (site / "masks" / "world-europe.png").exists()  # world views use the embedded image
+
+
+def test_embedded_world_map_matches_build_script():
+    """The template's world image is the one build_world_map.py produces (no stray placeholder)."""
+    import base64
+    import re
+    shared = (SCRIPT.parents[2] / "trmnl" / "src" / "shared.liquid").read_text()
+    embedded = base64.b64decode(re.search(r"world_mask = '([^']+)'", shared).group(1))
+    assert embedded == (SCRIPT.parents[2] / "trmnl" / "assets" / "world.png").read_bytes()
+    assert embedded[16:24] == (2048).to_bytes(4, "big") + (1024).to_bytes(4, "big")
