@@ -14,7 +14,7 @@
 | Fade | Black ≤ 24 h, then `bg--gray-20/30/40/50` in 12 h steps, hidden after 72 h. Each icon has a white halo so it reads on both the white land and the dark water. |
 | Labels | Boolean setting, off by default; labels up to 5 of the most recently observed volcanoes, placed to avoid overlaps. |
 | Map | One "Map" setting. 4 *World – centred on …* views (Europe & Africa default, Americas, Asia & Australia, Pacific): 2:1 equirectangular, our own Natural Earth world mask re-centred, coloured with the framework map's native map-land / map-water slots. 8 *Close-up – …* views: TRMNL framework map (`TRMNLMaps`, Web Mercator, OSM tiles from TRMNL), the framework's `outline` preset unmodified, whole-number zoom fitted to the region box. |
-| Markers | Plain volcano silhouette, also the recipe icon (width by activity, shade by age, white halo; no smoke or lava, per spec §4.2); world views positioned in Liquid, close-ups projected with MapLibre in the browser. |
+| Markers | Two hand-drawn icons (width by activity, shade by age, white halo): a lava cone for a heat signal, and a cone with an ash plume when GVP also lists the volcano as a continuing eruption. This departs from spec §4.2 (no smoke or lava) by user decision: the plume only appears for an official eruption, never for heat alone. The eruption icon is also the recipe icon. World views are positioned in Liquid; close-ups are projected with MapLibre in the browser. |
 
 ## Endpoints and credentials
 
@@ -23,6 +23,7 @@
 | FIRMS (default) | `https://firms.modaps.eosdis.nasa.gov/data/active_fire/suomi-npp-viirs-c2/csv/SUOMI_VIIRS_C2_Global_7d.csv` (~37 MB) | none |
 | FIRMS (optional) | Area API `…/api/area/csv/{MAP_KEY}/VIIRS_SNPP_NRT/world/{days}` | `FIRMS_MAP_KEY` repo secret, used only if set |
 | GVP catalogue | WFS `GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes`, GeoJSON | none |
+| GVP eruptions | WFS `GVP-VOTW:E3WebApp_Eruptions1960`, `ContinuingEruption = True` (38 on 2026-10-23; 21 of the 30 markers). If it fails, all markers fall back to the lava icon | none |
 | World map | Generated from Natural Earth 50m land (public domain) by `scripts/build_world_map.py`, embedded | none |
 | Close-up map | TRMNL framework map: `trmnl.com/js/maplibre-gl/5.24.0`, tiles from TRMNL (`tiles: "trmnl"`) | none |
 

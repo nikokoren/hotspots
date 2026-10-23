@@ -25,14 +25,15 @@ from hotspots.processing.scoring import aggregate
 from hotspots.processing.visual import build_markers, qualify
 from hotspots.render.layout import marker_list, view_markers
 from hotspots.render.views import DEFAULT_VIEW, VIEWS, world_shift_pct
-from hotspots.sources import firms
+from hotspots.sources import firms, gvp
 
 ATTRIBUTION = ("Thermal anomalies: NASA FIRMS VIIRS (LANCE). Volcanoes: Smithsonian Global Volcanism Program. "
                "Coastlines: Natural Earth.")
 
 
 def process(detections: list[Detection], volcanoes: list[Volcano], cfg: dict,
-            as_of: datetime) -> tuple[list[Marker], list[VolcanoActivity], dict]:
+            as_of: datetime, erupting_ids: set[str] | frozenset[str] = frozenset(),
+            ) -> tuple[list[Marker], list[VolcanoActivity], dict]:
     """Pure processing step: no I/O. Returns (markers, all candidate activities, stats)."""
     s, a = cfg["scoring"], cfg["association"]
     window_start = as_of - timedelta(hours=s["observation_window_hours"])
@@ -46,7 +47,7 @@ def process(detections: list[Detection], volcanoes: list[Volcano], cfg: dict,
         act.ambiguous_with = sorted(by_id[x].name for x in ambiguous.get(vid, ()))
         qualify(act, cfg, as_of)
         activities.append(act)
-    markers = build_markers(activities, cfg, as_of)
+    markers = build_markers(activities, cfg, as_of, erupting_ids)
     stats = {
         "detections_total": len(detections),
         "detections_in_window": len(recent),
@@ -55,6 +56,7 @@ def process(detections: list[Detection], volcanoes: list[Volcano], cfg: dict,
         "candidate_volcanoes": len(activities),
         "qualifying_volcanoes": sum(a.qualifies for a in activities),
         "markers": len(markers),
+        "markers_erupting": sum(m.erupting for m in markers),
     }
     return markers, activities, stats
 
@@ -81,7 +83,17 @@ def run(cfg: dict, out_dir: Path, cache_dir: Path, *, map_key: str | None = None
                                          cfg["catalogue"]["refresh_days"], log=log)
     log(f"Catalogue: {len(volcanoes)} volcanoes ({cat_meta['source']})")
 
-    markers, activities, stats = process(detections, volcanoes, cfg, as_of)
+    eruptions = gvp.fetch_continuing_eruptions()
+    if eruptions.ok:
+        erupting_ids = set(eruptions.items)
+        log(f"GVP continuing eruptions: {len(erupting_ids)}")
+    else:
+        # Without the official list every marker shows as thermal-only, never as erupting.
+        erupting_ids = set()
+        log(f"GVP eruptions fetch failed ({eruptions.error}); no marker shown as erupting")
+    cat_meta = {**cat_meta, "continuing_eruptions": len(erupting_ids) if eruptions.ok else None}
+
+    markers, activities, stats = process(detections, volcanoes, cfg, as_of, erupting_ids)
     log("Stats: " + json.dumps(stats))
 
     data_as_of = max((d.acquired_at for d in detections), default=None)

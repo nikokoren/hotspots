@@ -12,7 +12,14 @@ from hotspots.models import Marker
 from hotspots.render.labels import place
 from hotspots.render.views import Frame, View
 
-ICON_ASPECT = 1.5          # icon width / height (volcano silhouette)
+# Icon geometry, shared with the recipe (trmnl/src/shared.liquid) and build_icons.py:
+# both drawings sit on one 1345x1306 canvas (halo room included) so the cone lines up.
+ICON_ASPECT = 1345 / 1306                  # canvas width / height
+ICON_ANCHOR_Y = 0.683                      # the volcano's location: centre of the cone
+ICON_BOX = {                               # visible shape, fractions of the canvas
+    "lava": (0.052, 0.420, 0.948, 0.946),  # cone with lava channel: heat detected
+    "erupt": (0.052, 0.054, 0.948, 0.946),  # cone with plume: GVP continuing eruption
+}
 LABEL_CHAR_PCT = 0.95      # approx. label character width, % of map width
 LABEL_HEIGHT_PCT = 3.6     # approx. label height, % of map height
 
@@ -25,7 +32,20 @@ def marker_list(markers: list[Marker], *, min_pct: float, max_pct: float, max_ma
                 shades: list[str]) -> list[dict]:
     """All markers, ranked, for close-up views (the browser projects and filters them)."""
     return [{"n": m.name, "lat": m.lat, "lon": m.lon, "w": icon_pct(m, min_pct, max_pct),
-             "c": shade_class(m.fade_step, shades), "a": m.age_hours} for m in markers[:max_markers]]
+             "c": shade_class(m.fade_step, shades), "a": m.age_hours, "k": icon_kind(m)}
+            for m in markers[:max_markers]]
+
+
+def icon_kind(m: Marker) -> str:
+    return "erupt" if m.erupting else "lava"
+
+
+def icon_box(x: float, y: float, w: float, kind: str) -> tuple[float, float, float, float]:
+    """Visible icon box for an icon of width w anchored at (x, y); any units, y down."""
+    h = w / ICON_ASPECT
+    left, top = x - w / 2, y - ICON_ANCHOR_Y * h
+    bx0, by0, bx1, by1 = ICON_BOX[kind]
+    return (left + bx0 * w, top + by0 * h, left + bx1 * w, top + by1 * h)
 
 
 def icon_pct(m: Marker, min_pct: float, max_pct: float) -> float:
@@ -48,8 +68,9 @@ def view_markers(markers: list[Marker], view: View, *, min_pct: float, max_pct: 
     inside = inside[:max_markers]
 
     entries = [{"n": m.name, "x": round(x, 2), "y": round(y, 2), "w": icon_pct(m, min_pct, max_pct),
-                "c": shade_class(m.fade_step, shades), "a": m.age_hours} for m, x, y in inside]
-    icons = [{"x": e["x"], "y": e["y"] / 2, "hw": e["w"] / 2, "hh": e["w"] / ICON_ASPECT / 2,
+                "c": shade_class(m.fade_step, shades), "a": m.age_hours, "k": icon_kind(m)}
+               for m, x, y in inside]
+    icons = [{"x": e["x"], "y": e["y"] / 2, "box": icon_box(e["x"], e["y"] / 2, e["w"], e["k"]),
               "n": e["n"], "a": e["a"]} for e in entries]
     labels = [{"t": entries[lb.pop("i")]["n"], **lb}
               for lb in place(icons, max_labels, char_w=LABEL_CHAR_PCT, text_h=LABEL_HEIGHT_PCT / 2)]

@@ -75,6 +75,7 @@ class Marker:
     size: float          # 0..1, relative activity (mapped to icon width by the renderer)
     fade_step: int       # 0 = solid (≤ full_hours); 1..n = fade levels toward expiry
     age_hours: float
+    erupting: bool = False  # GVP lists a continuing eruption (official), not inferred from heat
 
 
 @dataclass
