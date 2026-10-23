@@ -4,9 +4,7 @@ fetch FIRMS → validate → load catalogue → associate → filter → group b
 volcano/overpass → score → qualify → size/fade → render → write site.
 
 Outputs (written to `out_dir`, published to GitHub Pages):
-    latest.json             payload polled by the TRMNL recipe: per-view marker positions
-    masks/<view>.png        land mask per close-up view (white ocean, transparent land);
-                            world views use the earthquake recipe's world image, embedded in the recipe
+    latest.json             payload polled by the TRMNL recipe: views and markers
     diagnostics.json        every candidate volcano with metrics and flags (calibration)
     catalogue.json          cached GVP catalogue, reused by the next run
 
@@ -25,8 +23,7 @@ from hotspots.models import Detection, Marker, Volcano, VolcanoActivity
 from hotspots.processing.association import associate
 from hotspots.processing.scoring import aggregate
 from hotspots.processing.visual import build_markers, qualify
-from hotspots.render.layout import view_markers
-from hotspots.render.mask import render_mask
+from hotspots.render.layout import marker_list, view_markers
 from hotspots.render.views import DEFAULT_VIEW, VIEWS, world_shift_pct
 from hotspots.sources import firms
 
@@ -99,32 +96,31 @@ def run(cfg: dict, out_dir: Path, cache_dir: Path, *, map_key: str | None = None
 def write_site(out_dir: Path, cfg: dict, markers: list[Marker], activities: list[VolcanoActivity],
                stats: dict, as_of: datetime, data_as_of: datetime | None, firms_meta: dict, cat_meta: dict) -> None:
     vis = cfg["visual"]
-    masks = out_dir / "masks"
-    masks.mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    sizing = {"min_pct": vis["min_icon_pct"], "max_pct": vis["max_icon_pct"], "shades": vis["shades"]}
     views = {}
     for view in VIEWS:
-        entry = {"label": view.label}
         if view.is_world:
-            entry["shift"] = world_shift_pct(view)
+            views[view.key] = {
+                "label": view.label, "world": True, "shift": world_shift_pct(view),
+                "markers": view_markers(markers, view, max_markers=vis["max_markers"],
+                                        max_labels=vis["max_labels"], **sizing),
+            }
         else:
-            (masks / f"{view.key}.png").write_bytes(render_mask(view))
-            entry["mask"] = f"masks/{view.key}.png"
-        views[view.key] = {
-            **entry,
-            "markers": view_markers(markers, view, min_pct=vis["min_icon_pct"], max_pct=vis["max_icon_pct"],
-                                    max_markers=vis["max_markers"], max_labels=vis["max_labels"],
-                                    shades=vis["shades"]),
-        }
+            views[view.key] = {"label": view.label, "world": False,
+                               "bbox": [view.lon_min, view.lat_min, view.lon_max, view.lat_max]}
 
     latest = {
         "generated_at": as_of.isoformat(timespec="seconds"),
         "data_as_of": data_as_of.isoformat(timespec="seconds") if data_as_of else None,
-        "version": as_of.strftime("%Y%m%d%H%M"),  # cache-buster for mask URLs
+        "version": as_of.strftime("%Y%m%d%H%M"),
         "site_url": cfg["output"]["site_url"],
         "product": firms_meta.get("product"),
         "marker_count": len(markers),
         "default_view": DEFAULT_VIEW,
+        "max_labels": vis["max_labels"],
         "views": views,
+        "markers": marker_list(markers, max_markers=vis["max_markers"], **sizing),
         "attribution": ATTRIBUTION,
     }
     (out_dir / "latest.json").write_text(json.dumps(latest, separators=(",", ":")))

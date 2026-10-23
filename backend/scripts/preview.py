@@ -7,7 +7,8 @@ page wrapper as trmnlp, against a site built by `hotspots run`.
     hotspots run --out site
     python scripts/preview.py site --layout full --region europe --labels --device og_png > preview.html
 
-Open the HTML in a browser (it loads the framework from trmnl.com).
+Open the HTML over http:// (not file://) so the framework's module script, fonts
+and the close-up map tiles load from trmnl.com, e.g. `python -m http.server`.
 TRMNL's {% template %} tag is emulated by registering each block as a partial.
 """
 
@@ -50,6 +51,7 @@ def render(site: Path, layout: str, region: str, labels: bool, device: str,
     payload["trmnl"] = {"plugin_settings": {"custom_fields_values": values}}
 
     env = Environment(loader=DictLoader(partials))
+    env.filters["json"] = lambda value: json.dumps(value)  # TRMNL Liquid's json filter
     body = env.from_string(markup).render(**payload)
 
     screen, *_ = DEVICES[device]

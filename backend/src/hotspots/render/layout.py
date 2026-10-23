@@ -1,7 +1,9 @@
-"""Per-view marker placement for the recipe's Liquid map.
+"""Marker encoding for the recipe.
 
-Positions are percentages of the 2:1 map box; icon width is a percentage of
-the map width, so the same payload scales to every TRMNL screen and layout.
+Dot diameter is a percentage of the map width and the shade is a TRMNL
+background class, so the same payload scales to every screen and layout.
+World views also get positions (percent of the 2:1 map box) and label sides
+here; close-ups are projected and labelled in the browser by the framework map.
 """
 
 from __future__ import annotations
@@ -9,13 +11,24 @@ from __future__ import annotations
 from hotspots.models import Marker
 from hotspots.render.views import Frame, View
 
-ICON_ASPECT = 1.5          # icon width / height (volcano silhouette)
+ICON_ASPECT = 1.0          # icon width / height (dot for now; 1.5 for the volcano silhouette)
 LABEL_CHAR_PCT = 0.95      # approx. label character width, % of map width
 LABEL_HEIGHT_PCT = 3.6     # approx. label height, % of map height
 
 
 def shade_class(fade_step: int, shades: list[str]) -> str:
     return "bg--black" if fade_step == 0 else shades[min(fade_step, len(shades)) - 1]
+
+
+def marker_list(markers: list[Marker], *, min_pct: float, max_pct: float, max_markers: int,
+                shades: list[str]) -> list[dict]:
+    """All markers, ranked, for close-up views (the browser projects and filters them)."""
+    return [{"n": m.name, "lat": m.lat, "lon": m.lon, "w": icon_pct(m, min_pct, max_pct),
+             "c": shade_class(m.fade_step, shades), "a": m.age_hours} for m in markers[:max_markers]]
+
+
+def icon_pct(m: Marker, min_pct: float, max_pct: float) -> float:
+    return round(min_pct + (max_pct - min_pct) * m.size, 2)
 
 
 def view_markers(markers: list[Marker], view: View, *, min_pct: float, max_pct: float,
@@ -32,7 +45,7 @@ def view_markers(markers: list[Marker], view: View, *, min_pct: float, max_pct: 
     out = []
     for m, x, y in inside:
         out.append({"n": m.name, "x": round(x, 2), "y": round(y, 2),
-                    "w": round(min_pct + (max_pct - min_pct) * m.size, 2),
+                    "w": icon_pct(m, min_pct, max_pct),
                     "c": shade_class(m.fade_step, shades), "a": m.age_hours, "l": ""})
     _place_labels(out, max_labels)
     out.sort(key=lambda e: -e["w"])

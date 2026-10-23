@@ -1,14 +1,12 @@
 """Map views and their projection.
 
-Every view is a 2:1 frame in an equirectangular projection, the same as the
-world map of the TRMNL earthquake recipe.
-
-* World views show the whole globe re-centred on a meridian. The recipe draws
-  them with the earthquake recipe's 1200x600 world image, tiled twice and
-  shifted (see world_shift_pct), so no mask is generated for them.
-* Close-up views crop a region and use a standard parallel at their
-  mid-latitude so shapes are not stretched sideways; their land masks are
-  generated from Natural Earth (render/mask.py).
+* World views show the whole globe re-centred on a meridian, as a 2:1
+  equirectangular frame. The recipe draws them with a 1200x600 world image
+  (currently a placeholder from the TRMNL community earthquake recipe), tiled
+  twice and shifted (see world_shift_pct); marker positions are computed here.
+* Close-up views are drawn by the TRMNL framework map (TRMNLMaps / MapLibre,
+  Web Mercator, OpenStreetMap tiles). Only their bounding box is defined here;
+  the recipe fits the map to it and projects the markers in the browser.
 """
 
 from __future__ import annotations
@@ -45,9 +43,9 @@ VIEWS: tuple[View, ...] = (
     world("world-americas", "World – centred on the Americas", -80),
     world("world-asia", "World – centred on Asia & Australia", 110),
     world("world-pacific", "World – centred on the Pacific", 160),
-    View("europe", "Close-up – Europe & Mediterranean", -28, 45, 27, 68),
+    View("europe", "Close-up – Europe & Mediterranean", -26, 42, 27, 67),
     View("africa-middle-east", "Close-up – Africa & Middle East", -22, 62, -38, 40),
-    View("north-america", "Close-up – North America & Alaska", -190, -58, 12, 72),
+    View("north-america", "Close-up – North America & Alaska", -170, -52, 12, 64),
     View("central-america", "Close-up – Central America & Caribbean", -112, -58, 5, 26),
     View("south-america", "Close-up – South America", -95, -30, -56, 14),
     View("east-asia", "Close-up – Japan, Kurils & Kamchatka", 122, 172, 22, 62),

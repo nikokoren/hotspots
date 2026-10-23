@@ -15,9 +15,6 @@ dev = ["pytest>=8", "python-liquid>=2"]
 [project.scripts]
 hotspots = "hotspots.cli:main"
 
-[tool.setuptools.package-data]
-hotspots = ["render/data/*.json"]
-
 [tool.setuptools.packages.find]
 where = ["src"]
 

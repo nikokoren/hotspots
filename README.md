@@ -6,9 +6,16 @@ recent volcanic heat. Each qualifying volcano gets one marker:
 - **size** shows relative observed thermal activity (NASA FIRMS VIIRS fire radiative power, log scale);
 - **shade** shows the age of the latest observation: black ≤ 24 h, then four lighter TRMNL greys until 72 h, then hidden.
 
-The map follows the [TRMNL community earthquake recipe](https://usetrmnl.com/recipes/33312): a land mask
-on a framework grey box with markers positioned in Liquid, so it renders natively on every TRMNL panel
-(1-bit to 16 greys, OG to X). World views reuse that recipe's world image, re-centred on the chosen region.
+Markers are plain dots for now (a volcano silhouette may come back later).
+
+- **World views** follow the [TRMNL community earthquake recipe](https://usetrmnl.com/recipes/33312): a
+  land mask on a framework grey box, re-centred on the chosen region, markers positioned in Liquid. The
+  world image is that recipe's, as a **placeholder** until we have our own.
+- **Close-ups** use the TRMNL framework map ([`TRMNLMaps`](https://trmnl.com/framework/docs/3.4/map):
+  MapLibre over TRMNL's OpenStreetMap tiles), repainted to the same grey land / white sea, with markers
+  projected in the browser.
+
+Both render natively on every TRMNL panel (1-bit to 16 greys, OG to X).
 
 Marker size is not eruption size, danger or probability, and no marker does not mean a volcano is inactive.
 
@@ -18,15 +25,15 @@ results: [`docs/report.md`](docs/report.md).
 ## How it works
 
 ```
-GitHub Actions (daily)                     GitHub Pages                        TRMNL (every install)
-  FIRMS VIIRS 7-day CSV ─┐                   latest.json  ◄──── polling ─────── recipe (Liquid draws
-  GVP volcano catalogue ─┼─► hotspots run ─► masks/<close-up>.png ◄── <img> ─┘  map + markers)
-  Natural Earth (vendored)┘                  diagnostics.json, catalogue.json
+GitHub Actions (daily)                     GitHub Pages                 TRMNL (every install)
+  FIRMS VIIRS 7-day CSV ─┐                   latest.json  ◄─── polling ─── recipe: world image or
+  GVP volcano catalogue ─┴─► hotspots run ─► diagnostics.json             TRMNLMaps close-up + dots
+                                             catalogue.json
 ```
 
 Only the GitHub Actions job contacts NASA and the Smithsonian; every recipe install reads that shared
-output. `latest.json` (~12 KB, under TRMNL's 100 KB limit) carries, per view, each marker's position
-(% of the map box), icon width (% of map width), grey class and label side. If the FIRMS fetch fails,
+output. `latest.json` (~13 KB, under TRMNL's 100 KB limit) carries the ranked markers (lat/lon, dot
+diameter as % of map width, grey class) plus, for world views, pre-computed positions and label sides. If the FIRMS fetch fails,
 nothing is deployed and the previous data stays up unchanged.
 
 ## Layout
@@ -37,9 +44,8 @@ backend/src/hotspots/
   processing/association.py            detection → volcano matching, ambiguity flags
   processing/scoring.py                overpass grouping, activity score, size normalization
   processing/visual.py                 qualification rules, fade steps, ranking
-  render/views.py                      map views, 2:1 equirectangular frames, world re-centring shift
-  render/mask.py                       land-mask PNG per close-up view (pure Python rasterizer)
-  render/layout.py                     per-view marker positions, sizes, shades, label sides
+  render/views.py                      map views: world frames + re-centring shift, close-up boxes
+  render/layout.py                     marker sizes and shades; world-view positions and label sides
   pipeline.py, cache.py, cli.py
 backend/scripts/                       basemap builder, calibration sweep, Liquid preview
 config/defaults.toml                   all thresholds
@@ -62,6 +68,7 @@ Recipe markup can be previewed with [`trmnlp`](https://github.com/usetrmnl/trmnl
 
 ```sh
 python backend/scripts/preview.py site --layout full --region europe --labels --device og_png > preview.html
+python -m http.server   # open it over http://, so the framework JS, fonts and map tiles load
 ```
 
 ## Deployment
@@ -84,6 +91,6 @@ python backend/scripts/preview.py site --layout full --region europe --labels --
 
 - NASA FIRMS: VIIRS S-NPP NRT active fire / thermal anomaly data (LANCE). https://firms.modaps.eosdis.nasa.gov/
 - Global Volcanism Program, Smithsonian Institution: Volcanoes of the World database. https://volcano.si.edu/
-- Natural Earth: land polygons for the close-up maps, public domain. https://www.naturalearthdata.com/
-- World map image: from the TRMNL community earthquake recipe (https://usetrmnl.com/recipes/33312);
-  its licence is not stated there, so confirm with the recipe author before publishing.
+- Close-up maps: © OpenStreetMap contributors (ODbL), tiles and styling by the TRMNL framework.
+- World map image: **placeholder** from the TRMNL community earthquake recipe
+  (https://usetrmnl.com/recipes/33312); licence not stated, to be replaced before publishing.

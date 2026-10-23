@@ -13,7 +13,8 @@
 | Size vs age | Size = activity only; age shown only through shade. |
 | Fade | Black ≤ 24 h, then `bg--gray-20/30/40/50` in 12 h steps, hidden after 72 h. Land is `bg--gray-70`, so the faintest marker stays darker than land. |
 | Labels | Boolean setting, off by default; labels up to 5 of the most recently observed volcanoes, placed to avoid overlaps. |
-| Map | 2:1 equirectangular (as the earthquake recipe). One "Map" setting: 4 *World – centred on …* views (Europe & Africa default, Americas, Asia & Australia, Pacific) that re-centre the earthquake recipe's world image, and 8 *Close-up – …* regional views with Natural Earth land masks and a mid-latitude standard parallel. |
+| Map | One "Map" setting. 4 *World – centred on …* views (Europe & Africa default, Americas, Asia & Australia, Pacific): 2:1 equirectangular, the earthquake recipe's world image (placeholder) re-centred. 8 *Close-up – …* views: TRMNL framework map (`TRMNLMaps`, Web Mercator, OSM tiles from TRMNL), coast and water only, repainted grey land / white sea, whole-number zoom fitted to the region box. |
+| Markers | Dots for now (diameter by activity, shade by age, white halo); world views positioned in Liquid, close-ups projected with MapLibre in the browser. |
 
 ## Endpoints and credentials
 
@@ -22,7 +23,8 @@
 | FIRMS (default) | `https://firms.modaps.eosdis.nasa.gov/data/active_fire/suomi-npp-viirs-c2/csv/SUOMI_VIIRS_C2_Global_7d.csv` (~37 MB) | none |
 | FIRMS (optional) | Area API `…/api/area/csv/{MAP_KEY}/VIIRS_SNPP_NRT/world/{days}` | `FIRMS_MAP_KEY` repo secret, used only if set |
 | GVP catalogue | WFS `GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes`, GeoJSON | none |
-| Basemap | Natural Earth 110m / 50m land, vendored (public domain) | none |
+| World map | Placeholder image from the TRMNL community earthquake recipe, embedded | none |
+| Close-up map | TRMNL framework map: `trmnl.com/js/maplibre-gl/5.24.0`, tiles from TRMNL (`tiles: "trmnl"`) | none |
 
 **Finding:** FIRMS publishes keyless global files (24 h / 48 h / 7 d) for S-NPP, NOAA-20 and NOAA-21. That removes the need for an API key and covers the 72 h window in one request. The key path is kept as a fallback.
 
@@ -94,7 +96,10 @@ These include the known long-running eruptions (Kilauea, Sangay, Ibu, Lewotolok,
 - **Dense clusters** (Java, Lesser Sunda Islands) overlap on world views. Regional views separate them.
 - **One satellite only.** S-NPP is aging. NOAA-20/21 are configured as alternatives but not merged.
 - **Not yet checked with trmnlp or on a device.** Templates were rendered with a python-liquid stand-in and TRMNL's real framework CSS/JS in headless Chromium for OG (1-bit), OG Plus (2-bit) and X (4-bit), in all four layouts.
-- **Half-vertical layout** shows the 2:1 map with much empty space; a portrait-specific view would use it better.
+- **Half-vertical layout** shows the 2:1 world map with much empty space; a portrait-specific view would use it better.
+- **Close-up zoom is whole-number only** (the framework keeps dither on the pixel grid), so a region shows either somewhat more or up to ~20% less than its box, depending on the screen size.
+- **Close-ups need WebGL** in TRMNL's renderer; without it the framework shows the "Map unavailable" fallback.
+- **Two Hotspots close-ups in one mashup** would share an element id; not supported yet.
 
 ## Recommended adjustments
 

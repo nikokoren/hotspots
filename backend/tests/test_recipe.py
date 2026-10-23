@@ -37,11 +37,15 @@ def test_layouts_render(site, layout):
     assert "Liquid" not in html and "{{" not in html and "{%" not in html
 
 
-def test_labels_off_and_region_switch(site):
+def test_closeup_uses_framework_map(site):
     html = preview.render(site, "full", "europe", labels=False, device="og_png")
-    assert html.count('class="hs-v"') == 1  # Etna only
-    assert "<span class=\"hs-l " not in html
-    assert "masks/europe.png" in html and "hs-strip" not in html.split("</style>")[1]
+    body = html.split("</style>")[1]
+    assert 'id="hs-closeup" class="map' in body and "hs-strip" not in body
+    assert "maplibre-gl/5.24.0/maplibre-gl.js" in body and 'tiles: "trmnl"' in body
+    assert "var bbox = [-26, 27, 42, 67];" in body
+    assert 'var showLabels = false;' in body
+    assert '"n": "Kilauea"' in body and '"n": "Etna"' in body  # all markers; the browser filters
+    assert "window.onload" not in body and "async function" not in body  # TRMNL lint rules
 
 
 def test_unset_region_falls_back_to_europe_world(site):

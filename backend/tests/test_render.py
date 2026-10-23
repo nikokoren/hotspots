@@ -1,10 +1,6 @@
-import struct
-import zlib
-
 from hotspots.models import Marker
-from hotspots.render.layout import shade_class, view_markers
-from hotspots.render.mask import encode_png, rasterize
-from hotspots.render.views import VIEWS, VIEWS_BY_KEY, Frame, world, world_shift_pct
+from hotspots.render.layout import marker_list, shade_class, view_markers
+from hotspots.render.views import VIEWS, VIEWS_BY_KEY, Frame, world_shift_pct
 
 SHADES = ["bg--gray-20", "bg--gray-30", "bg--gray-40", "bg--gray-50"]
 
@@ -37,64 +33,31 @@ def test_default_view_is_europe_centred_world():
     assert DEFAULT_VIEW == "world-europe" and VIEWS_BY_KEY[DEFAULT_VIEW].is_world
 
 
-def test_regional_frames_are_two_to_one_and_contain_their_box():
+def test_closeup_boxes_are_sane():
     for view in VIEWS:
-        f = Frame(view)
-        assert abs(f.width / f.height - 2) < 1e-9
-        for lon, lat in ((view.lon_min, view.lat_min), (view.lon_max, view.lat_max)):
-            u, v = f.uv(lon, lat)
-            assert -1e-9 <= u <= 1 + 1e-9 and -1e-9 <= v <= 1 + 1e-9, view.key
-
-
-def test_antimeridian_region():
-    f = Frame(VIEWS_BY_KEY["southwest-pacific"])
-    assert f.contains(*f.uv(-175.4, -21.1))  # Tonga
-    assert f.contains(*f.uv(148.4, -5.5))    # New Britain
-    assert not f.contains(*f.uv(15.0, 37.7))
-
-
-def test_mask_marks_land_and_ocean():
-    view = world("atlantic", "test", 10)  # world masks are only used in tests now
-    rows = rasterize(view, 360, 180)
-    f = Frame(view)
-
-    def at(lon, lat):
-        u, v = f.uv(lon, lat)
-        return rows[min(179, int(v * 180))][min(359, int(u * 360))]
-
-    assert at(20, 5) == 1        # central Africa
-    assert at(-30, 0) == 0       # mid-Atlantic
-    assert at(-155, 10) == 0     # Pacific
-    assert at(0, -85) == 1       # Antarctica interior
-    assert at(-40, -60) == 0     # Southern Ocean (pole closure must not flood it)
-
-
-def test_png_is_valid_palette_with_transparency():
-    png = encode_png([bytearray([0, 1, 0]), bytearray([1, 1, 0])])
-    assert png.startswith(b"\x89PNG\r\n\x1a\n")
-    w, h, depth, ctype = struct.unpack(">IIBB", png[16:26])
-    assert (w, h, depth, ctype) == (3, 2, 8, 3)
-    idat = png.index(b"IDAT")
-    length = struct.unpack(">I", png[idat - 4:idat])[0]
-    assert zlib.decompress(png[idat + 4:idat + 4 + length]) == b"\x00\x00\x01\x00\x00\x01\x01\x00"
-    assert b"tRNS" in png
+        if view.is_world:
+            continue
+        assert view.lon_min < view.lon_max and view.lat_min < view.lat_max, view.key
+        assert view.lon_max - view.lon_min < 180, view.key
 
 
 def test_view_markers_filter_limit_and_order():
     markers = [_marker("Etna", 37.75, 15.0, 0.2), _marker("Kilauea", 19.4, -155.3, 0.8),
                _marker("Stromboli", 38.79, 15.21, 0.5)]
-    europe = view_markers(markers, VIEWS_BY_KEY["europe"], min_pct=1, max_pct=5,
-                          max_markers=30, max_labels=5, shades=SHADES)
-    assert [e["n"] for e in europe] == ["Stromboli", "Etna"]  # Kilauea outside; largest drawn first
-    assert europe[0]["w"] == 3.0
     world = view_markers(markers, VIEWS_BY_KEY["world-pacific"], min_pct=1, max_pct=5,
                          max_markers=2, max_labels=0, shades=SHADES)
     assert len(world) == 2 and all(e["l"] == "" for e in world)
 
 
+def test_marker_list_for_closeups():
+    markers = [_marker("Etna", 37.75, 15.0, 0.25, step=2), _marker("Kilauea", 19.4, -155.3, 1.0)]
+    out = marker_list(markers, min_pct=1, max_pct=5, max_markers=1, shades=SHADES)
+    assert out == [{"n": "Etna", "lat": 37.75, "lon": 15.0, "w": 2.0, "c": "bg--gray-30", "a": 1.0}]
+
+
 def test_labels_do_not_overlap_and_respect_limit():
     markers = [_marker(f"V{i}", 0.0, 100.0 + i * 0.2, 0.5, age=i) for i in range(6)]
-    out = view_markers(markers, VIEWS_BY_KEY["southeast-asia"], min_pct=1, max_pct=5,
+    out = view_markers(markers, VIEWS_BY_KEY["world-asia"], min_pct=1, max_pct=5,
                        max_markers=30, max_labels=3, shades=SHADES)
     labelled = [e for e in out if e["l"]]
     assert 1 <= len(labelled) <= 3
