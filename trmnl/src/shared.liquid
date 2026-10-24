@@ -136,23 +136,18 @@
   // Labels on our own map are placed in the browser at the size this layout gives the map,
   // as on the framework map: text keeps its size while the map shrinks in smaller layouts.
   {% if show_labels %}
-  if (document.getElementById("hs-world").offsetParent !== null) {
-    HSMap.labelWorld("hs-world", {
-      markers: {{ view.markers | json }}, maxLabels: {{ max_labels | json }}, mapScale: {{ map_scale | json }}
-    });
-  }
+  HSMap.labelWorld("hs-world", {
+    markers: {{ view.markers | json }}, maxLabels: {{ max_labels | json }}, mapScale: {{ map_scale | json }}
+  });
   {% endif %}
 
   // TRMNL X (screen--lg) without the volcano list: the framework map fills the whole space
-  // (CSS shows it in place of our map). Elsewhere, and with the list, our own map stays.
-  (function () {
-    var nat = document.getElementById("hs-native");
-    if (window.getComputedStyle(nat).display === "none") return;
-    HSMap.start("hs-native", {
-      world: true, lon: {{ view.lon | json }}, markers: {{ markers | json }},
-      showLabels: {{ show_labels | json }}, maxLabels: {{ max_labels | json }}, mapScale: {{ map_scale | json }}
-    });
-  })();
+  // (CSS shows it in place of our map). Always started: it builds nothing while hidden and is
+  // rebuilt whenever the screen's device/layout classes change (e.g. switching in the editor).
+  HSMap.start("hs-native", {
+    world: true, lon: {{ view.lon | json }}, markers: {{ markers | json }},
+    showLabels: {{ show_labels | json }}, maxLabels: {{ max_labels | json }}, mapScale: {{ map_scale | json }}
+  });
 </script>
 {% endtemplate %}
 {% template volcano_mapjs %}
@@ -286,8 +281,8 @@
     function labelWorld(el, o) {
       function run() {
         var box = document.getElementById(el), W = box.clientWidth, H = box.clientHeight;
-        if (!W || !H) return;
         Array.prototype.forEach.call(box.querySelectorAll(".hs-l, .hs-lines"), function (n) { n.remove(); });
+        if (!W || !H) return;  // hidden on this screen (TRMNL X shows the framework map)
         var shown = o.markers.map(function (m) {
           var x = m.x * W / 100, y = m.y * H / 100, d = m.w * o.mapScale * W / 100, h = d * 1306 / 1345;
           var top = y - 0.683 * h, left = x - d / 2, b = ICON_BOX[m.k];
@@ -298,7 +293,9 @@
       var tries = 0;
       (function wait() {
         if (!window.TRMNL_PLUGINS_READY && ++tries <= 100) return setTimeout(wait, 50);
-        if (document.fonts && document.fonts.ready) document.fonts.ready.then(run); else run();
+        // Again whenever the screen's classes change: the editor switches device and layout in place.
+        var watchRun = function () { if (window.TRMNLPaint) TRMNLPaint.watch(el, run); else run(); };
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(watchRun); else watchRun();
       })();
     }
 
@@ -307,13 +304,16 @@
         TRMNLMaps.watch(el, function () {
           var bbox = o.bbox, center = o.center, zoom = o.zoom;
           if (o.world) {
+            // Hidden here (not TRMNL X, or the volcano list is on): no map now; watch() builds
+            // it again when the screen's classes change.
+            var box = document.getElementById(el), W = box.clientWidth, H = box.clientHeight;
+            if (!W || !H) return null;
             // Whole world at a whole zoom, centred on the view's meridian and, north–south, on
             // 55°S–65°N where nearly all active volcanoes are. Across, the world may be up to
             // 10% narrower than the box (the edges repeat a sliver of it) rather than jumping
             // a zoom and showing half: on TRMNL X the box is a few px over zoom 1's 1024 px.
             // Down, it must cover the box (no band beyond the poles). Narrow boxes crop
             // longitudes.
-            var box = document.getElementById(el), W = box.clientWidth, H = box.clientHeight;
             var zW = Math.floor(Math.log2(W / 512) + 0.15), zH = Math.ceil(Math.log2(H / 512) - 1e-9);
             zoom = Math.max(0, zW, zH);
             var my = function (lat) { return Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)); };
