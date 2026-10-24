@@ -34,7 +34,7 @@ def test_layouts_render(site, layout):
     assert ('class="hs-strip" data-map-slot="map-land" style="left: -44.444%; '
             '--hs-mask: url(data:image/png;base64,iVBOR') in html
     assert html.count('class="hs-v hs-v--') == 2
-    assert ">Kilauea</span>" in html and 'class="hs-lines"' in html  # labels on
+    assert 'HSMap.labelWorld("hs-world"' in html                       # labels on, placed in the browser
     assert "Liquid" not in html and "{{" not in html and "{%" not in html
 
 

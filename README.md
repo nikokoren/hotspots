@@ -55,7 +55,8 @@ GitHub Actions (daily)                     GitHub Pages                 TRMNL (e
 
 Only the GitHub Actions job contacts NASA and the Smithsonian; every recipe install reads that shared
 output. `latest.json` (~13 KB, under TRMNL's 100 KB limit) carries the ranked markers (lat/lon, icon
-width as % of map width, grey class) plus, for world views, pre-computed positions and label sides. If the FIRMS fetch fails,
+width as % of map width, grey class) plus, for world views, pre-computed positions. Labels are placed in the
+browser on every map, measured at the size each layout gives it, with leader lines where crowded. If the FIRMS fetch fails,
 nothing is deployed and the previous data stays up unchanged.
 
 ## Layout
@@ -67,7 +68,7 @@ backend/src/hotspots/
   processing/scoring.py                overpass grouping, activity score, size normalization
   processing/visual.py                 qualification rules, fade steps, ranking
   render/views.py                      map views: world frames + re-centring shift, close-up boxes
-  render/layout.py                     marker sizes and shades; world-view positions and label sides
+  render/layout.py                     marker sizes and shades; world-view positions
   pipeline.py, cache.py, cli.py
 backend/scripts/                       world map builder, calibration sweep, Liquid preview
 config/defaults.toml                   all thresholds

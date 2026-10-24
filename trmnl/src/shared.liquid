@@ -4,14 +4,13 @@
   Polled payload (latest.json, published daily by GitHub Actions):
     generated_at, data_as_of, version, default_view, max_labels,
     markers: [ { n, lat, lon, w, c, a, k, co, s } ]  ranked; framework map + volcano list
-    views: { <key>: { label, world: true,  shift, lon, markers: [ { n, x, y, w, c, a, k } ],
-                      labels: [ { t, x, y, a: start|end|middle, ld: [x1, y1, x2, y2] | null } ] }
+    views: { <key>: { label, world: true,  shift, lon, markers: [ { n, x, y, w, c, a, k } ] }
            | { label, world: false, bbox: [west, south, east, north] } }
       w  icon width, % of map width      c  TRMNL background class (age)
       x, y  world position, % of the 2:1 box    k  icon: lava (heat) | erupt (confirmed eruption)
+      Map labels are placed in the browser for every map (HSMap), at each layout's real size.
       co  country    s  latest observation, Unix seconds    a  its age at run time, h
       shift  % to slide the tiled world image so the chosen meridian (lon) is centred
-      labels: x, y and leader lines in map-width units (x 0..100, y 0..50); see render/labels.py
 
   World views: on TRMNL X (screen--lg), unless the volcano list is on, the framework map
   fills the space, centred on the chosen meridian. Elsewhere our own 2:1 world map: a Natural Earth land mask (backend/scripts/build_world_map.py)
@@ -88,15 +87,6 @@
         <i class="{{ m.c }}"></i>
       </div>
     {% endfor %}
-    {% if show_labels %}
-      <svg class="hs-lines" viewBox="0 0 100 50" preserveAspectRatio="none">
-        {% for l in view.labels %}{% if l.ld %}<line class="hs-lc" x1="{{ l.ld[0] }}" y1="{{ l.ld[1] }}" x2="{{ l.ld[2] }}" y2="{{ l.ld[3] }}"/><line class="hs-ln" x1="{{ l.ld[0] }}" y1="{{ l.ld[1] }}" x2="{{ l.ld[2] }}" y2="{{ l.ld[3] }}"/>{% endif %}{% endfor %}
-      </svg>
-      {% for l in view.labels %}
-        {% assign ly = l.y | times: 2 %}
-        <span class="hs-l hs-l--{{ l.a }} label label--small text-stroke" style="left: {{ l.x }}%; top: {{ ly }}%;">{{ l.t }}</span>
-      {% endfor %}
-    {% endif %}
   </div>
   {% comment %} Volcano list setting: framework items, newest first, in whatever space the map leaves. The framework's
      overflow engine drops rows that don't fit and adds "and N more". Columns per screen size come from the
@@ -140,6 +130,16 @@
       if (++tries <= 200) setTimeout(attempt, 50);
     })();
   })();
+
+  // Labels on our own map are placed in the browser at the size this layout gives the map,
+  // as on the framework map: text keeps its size while the map shrinks in smaller layouts.
+  {% if show_labels %}
+  if (window.getComputedStyle(document.getElementById("hs-world")).display !== "none") {
+    HSMap.labelWorld("hs-world", {
+      markers: {{ view.markers | json }}, maxLabels: {{ max_labels | json }}, mapScale: {{ map_scale | json }}
+    });
+  }
+  {% endif %}
 
   // TRMNL X (screen--lg) without the volcano list: the framework map fills the whole space
   // (CSS shows it in place of our map). Elsewhere, and with the list, our own map stays.
@@ -195,7 +195,7 @@
       if (o.showLabels) placeLabels(box, W, H, shown, o.maxLabels);
     }
 
-    // Labels with leader lines, mirroring backend/src/hotspots/render/labels.py (in px):
+    // Labels with leader lines (in px, measured on the page):
     // next to the icon if free, else out along one of sixteen directions with a line back
     // to the icon (never through a label or an icon not stacked on its own), else dropped.
     // Newest first.
@@ -227,7 +227,8 @@
           span.className = "hs-l label label--small text-stroke";
           span.textContent = s.m.n;
           box.appendChild(span);
-          var tw = span.offsetWidth, th = span.offsetHeight;
+          // Small margin: the framework's text pass can still nudge glyph widths after measuring.
+          var tw = Math.ceil(span.offsetWidth * 1.08) + 2, th = span.offsetHeight + 2;
           var near = [ib[0] - g, ib[1] - g, ib[2] + g, ib[3] + g];
           var blockers = boxes.filter(function (b, j) { return j !== i && (j >= nIcons || !overlaps(b, near)); });
           function fits(b) {
@@ -278,6 +279,27 @@
         });
     }
 
+    // Our own world map: markers are already placed (percent of the box); label them with
+    // the same rules once the framework's pass and fonts are done, so widths are final.
+    function labelWorld(el, o) {
+      function run() {
+        var box = document.getElementById(el), W = box.clientWidth, H = box.clientHeight;
+        if (!W || !H) return;
+        Array.prototype.forEach.call(box.querySelectorAll(".hs-l, .hs-lines"), function (n) { n.remove(); });
+        var shown = o.markers.map(function (m) {
+          var x = m.x * W / 100, y = m.y * H / 100, d = m.w * o.mapScale * W / 100, h = d * 1306 / 1345;
+          var top = y - 0.683 * h, left = x - d / 2, b = ICON_BOX[m.k];
+          return { m: m, x: x, y: y, box: [left + b[0] * d, top + b[1] * h, left + b[2] * d, top + b[3] * h] };
+        });
+        placeLabels(box, W, H, shown, o.maxLabels);
+      }
+      var tries = 0;
+      (function wait() {
+        if (!window.TRMNL_PLUGINS_READY && ++tries <= 100) return setTimeout(wait, 50);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(run); else run();
+      })();
+    }
+
     function start(el, o) {
       whenReady(function () {
         TRMNLMaps.watch(el, function () {
@@ -315,7 +337,7 @@
         });
       });
     }
-    return { start: start };
+    return { start: start, labelWorld: labelWorld };
   })();
 </script>
 {% endtemplate %}
