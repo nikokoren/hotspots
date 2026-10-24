@@ -24,9 +24,9 @@ The eruption drawing is also the recipe icon.
 Both map kinds use the TRMNL framework map's **native colours** (its `map-land` and `map-water` slots:
 white land and a dark water dither on 1-bit, greys on 4-bit, theme and dark-mode aware).
 
-- **World views:** the whole globe re-centred on the chosen region. Where TRMNL's framework map fills the
-  space at a whole-number zoom (TRMNL X full screen and quadrant) it is used, as in the close-ups; it hides
-  at most 15% of the longitudes, at the edges of the map. Elsewhere the recipe draws its own 2:1 map. With the
+- **World views:** the whole globe re-centred on the chosen region. On TRMNL X, TRMNL's framework map fills
+  every layout, as in the close-ups, at the smallest whole-number zoom that covers the space (so narrow
+  layouts crop longitudes at the map edges). On other devices the recipe draws its own 2:1 map. With the
   *Volcano list* setting on, our map is always used and the height or width it leaves holds a list of the
   volcanoes, newest first (name, country, erupting or heat only, time since last seen). For our own map, the
   box is painted with

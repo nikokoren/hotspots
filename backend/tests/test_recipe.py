@@ -51,7 +51,7 @@ def test_closeup_uses_framework_map(site):
 
 def test_world_view_offers_framework_map_without_list(site):
     body = preview.render(site, "full", "world-europe", labels=False, device="v2").split("</style>")[1]
-    assert 'HSMap.start("hs-native"' in body and "if (false) return;" in body  # used where it fills the space
+    assert 'HSMap.start("hs-native"' in body and "world: true" in body       # TRMNL X: framework map
     assert "hs-strip" in body                                                 # our map otherwise
     assert '<div class="item">' not in body                                   # list is off by default
 
@@ -59,7 +59,7 @@ def test_world_view_offers_framework_map_without_list(site):
 def test_volcano_list_setting(site):
     body = preview.render(site, "full", "world-europe", labels=False, device="v2",
                           show_list=True).split("</style>")[1]
-    assert "if (true) return;" in body                                        # list keeps our map
+    assert 'class="hs-wv hs-wv--list"' in body                                # list keeps our map
     assert body.count('<div class="item">') == 2 and 'data-overflow-counter="true"' in body
     assert 'data-overflow-max-cols="1" data-overflow-max-cols-lg="4" data-overflow-max-cols-lg-portrait="3"' in body
     assert '<span class="label label--small label--outline">heat only</span>' in body
