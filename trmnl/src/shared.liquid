@@ -283,11 +283,15 @@
         TRMNLMaps.watch(el, function () {
           var bbox = o.bbox, center = o.center, zoom = o.zoom;
           if (o.world) {
-            // Whole world: the smallest whole zoom at which it covers the box both ways (no
-            // band beyond the poles), centred on the view's meridian and, north–south, on
-            // 55°S–65°N where nearly all active volcanoes are. Narrow boxes crop longitudes.
+            // Whole world at a whole zoom, centred on the view's meridian and, north–south, on
+            // 55°S–65°N where nearly all active volcanoes are. Across, the world may be up to
+            // 10% narrower than the box (the edges repeat a sliver of it) rather than jumping
+            // a zoom and showing half: on TRMNL X the box is a few px over zoom 1's 1024 px.
+            // Down, it must cover the box (no band beyond the poles). Narrow boxes crop
+            // longitudes.
             var box = document.getElementById(el), W = box.clientWidth, H = box.clientHeight;
-            zoom = Math.max(0, Math.ceil(Math.log2(Math.max(W, H) / 512) - 1e-9));
+            var zW = Math.floor(Math.log2(W / 512) + 0.15), zH = Math.ceil(Math.log2(H / 512) - 1e-9);
+            zoom = Math.max(0, zW, zH);
             var my = function (lat) { return Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)); };
             var half = H / (512 * Math.pow(2, zoom)) * Math.PI;
             var y = Math.max(-Math.PI + half, Math.min(Math.PI - half, (my(65) + my(-55)) / 2));
