@@ -59,10 +59,10 @@ def test_world_view_offers_framework_map_without_list(site):
 def test_volcano_list_setting(site):
     body = preview.render(site, "full", "world-europe", labels=False, device="v2",
                           show_list=True).split("</style>")[1]
-    assert 'class="hs-wv hs-wv--list"' in body                                # list keeps our map
+    assert 'id="hs-native" class="map stretch w--full rounded--base hidden">' in body  # list keeps our map
     assert body.count('<div class="item">') == 2 and 'data-overflow-counter="true"' in body
     assert 'data-overflow-max-cols="1" data-overflow-max-cols-md="1" data-overflow-max-cols-md-portrait="2" data-overflow-max-cols-lg="4" data-overflow-max-cols-lg-portrait="3"' in body
-    assert '<span class="label label--small label--outline">heat only</span>' in body
+    assert '<span class="label label--small label--outline no-shrink">heat only</span>' in body
     assert body.index(">Kilauea<") < body.index(">Etna<")                     # newest first
 
 
