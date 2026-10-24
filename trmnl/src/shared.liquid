@@ -80,10 +80,16 @@
     <span class="map__fallback title">Map unavailable on this screen</span>
   </div>
   <div id="hs-world" class="hs-map" data-map-slot="map-water">
-    <div class="hs-strip" data-map-slot="map-land" style="left: -{{ view.shift }}%; --hs-mask: url(data:image/png;base64,{{ world_mask }});"></div>
+    {% comment %} Positions as generated rules rather than inline styles: one class per marker and label. {% endcomment %}
+    <style>
+      #hs-world .hs-strip { left: -{{ view.shift }}%; --hs-mask: url(data:image/png;base64,{{ world_mask }}); }
+      {% for m in view.markers %}{% assign w = m.w | times: map_scale %}#hs-world .hs-m{{ forloop.index }} { left: {{ m.x }}%; top: {{ m.y }}%; width: {{ w }}%; }
+      {% endfor %}{% if show_labels %}{% for l in view.labels %}{% assign ly = l.y | times: 2 %}#hs-world .hs-t{{ forloop.index }} { left: {{ l.x }}%; top: {{ ly }}%; }
+      {% endfor %}{% endif %}
+    </style>
+    <div class="hs-strip" data-map-slot="map-land"></div>
     {% for m in view.markers %}
-      {% assign w = m.w | times: map_scale %}
-      <div class="hs-v hs-v--{{ m.k }}" style="left: {{ m.x }}%; top: {{ m.y }}%; width: {{ w }}%;">
+      <div class="hs-v hs-v--{{ m.k }} hs-m{{ forloop.index }}">
         <i class="hs-halo bg--white"></i>
         <i class="{{ m.c }}"></i>
       </div>
@@ -93,8 +99,7 @@
         {% for l in view.labels %}{% if l.ld %}<line class="hs-lc" x1="{{ l.ld[0] }}" y1="{{ l.ld[1] }}" x2="{{ l.ld[2] }}" y2="{{ l.ld[3] }}"/><line class="hs-ln" x1="{{ l.ld[0] }}" y1="{{ l.ld[1] }}" x2="{{ l.ld[2] }}" y2="{{ l.ld[3] }}"/>{% endif %}{% endfor %}
       </svg>
       {% for l in view.labels %}
-        {% assign ly = l.y | times: 2 %}
-        <span class="hs-l hs-l--{{ l.a }} label label--small text-stroke" style="left: {{ l.x }}%; top: {{ ly }}%;">{{ l.t }}</span>
+        <span class="hs-l hs-l--{{ l.a }} hs-t{{ forloop.index }} label label--small text-stroke">{{ l.t }}</span>
       {% endfor %}
     {% endif %}
   </div>

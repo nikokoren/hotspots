@@ -12,6 +12,7 @@ static_data: ''
 custom_fields:
 - keyname: about
   field_type: author_bio
+  category: nature,environment
   name: About
   description: Recent volcanic thermal activity from NASA FIRMS VIIRS satellite data, matched to the Smithsonian
     Global Volcanism Program catalogue. Icon size shows relative observed heat (not eruption size or danger);
