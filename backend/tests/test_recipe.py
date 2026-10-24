@@ -31,18 +31,16 @@ def site(tmp_path_factory):
 def test_layouts_render(site, layout):
     html = preview.render(site, layout, "world-pacific", labels=True, device="og_png")
     assert 'id="hs-world" class="hs-map" data-map-slot="map-water"' in html
-    assert ('#hs-world .hs-strip { left: -44.444%; '
+    assert ('class="hs-strip" data-map-slot="map-land" style="left: -44.444%; '
             '--hs-mask: url(data:image/png;base64,iVBOR') in html
-    assert html.count('class="hs-v hs-v--') == 2 and "#hs-world .hs-m2 { left: " in html
-    body = html.split("</style>", 1)[1]
-    assert 'style="' not in body                                     # positions are generated rules
+    assert html.count('class="hs-v hs-v--') == 2
     assert ">Kilauea</span>" in html and 'class="hs-lines"' in html  # labels on
     assert "Liquid" not in html and "{{" not in html and "{%" not in html
 
 
 def test_closeup_uses_framework_map(site):
     html = preview.render(site, "full", "europe", labels=False, device="og_png")
-    body = html.split("</style>", 1)[1]
+    body = html.split("</style>")[1]
     assert 'id="hs-closeup" class="map' in body and "hs-strip" not in body
     assert "maplibre-gl/5.24.0/maplibre-gl.js" in body and 'tiles: "trmnl"' in body
     assert "bbox: [-26, 27, 42, 67]," in body
@@ -52,7 +50,7 @@ def test_closeup_uses_framework_map(site):
 
 
 def test_world_view_offers_framework_map_without_list(site):
-    body = preview.render(site, "full", "world-europe", labels=False, device="v2").split("</style>", 1)[1]
+    body = preview.render(site, "full", "world-europe", labels=False, device="v2").split("</style>")[1]
     assert 'HSMap.start("hs-native"' in body and "world: true" in body       # TRMNL X: framework map
     assert "hs-strip" in body                                                 # our map otherwise
     assert '<div class="item">' not in body                                   # list is off by default
@@ -60,7 +58,7 @@ def test_world_view_offers_framework_map_without_list(site):
 
 def test_volcano_list_setting(site):
     body = preview.render(site, "full", "world-europe", labels=False, device="v2",
-                          show_list=True).split("</style>", 1)[1]
+                          show_list=True).split("</style>")[1]
     assert 'class="hs-wv hs-wv--list"' in body                                # list keeps our map
     assert body.count('<div class="item">') == 2 and 'data-overflow-counter="true"' in body
     assert 'data-overflow-max-cols="1" data-overflow-max-cols-lg="4" data-overflow-max-cols-lg-portrait="3"' in body
@@ -76,7 +74,7 @@ def test_about_field_has_categories():
 
 def test_unset_region_falls_back_to_europe_world(site):
     html = preview.render(site, "full", "", labels=False, device="og_png")
-    assert "#hs-world .hs-strip { left: -4.167%;" in html
+    assert 'data-map-slot="map-land" style="left: -4.167%;' in html
 
 
 def test_payload_under_trmnl_limit(site):
