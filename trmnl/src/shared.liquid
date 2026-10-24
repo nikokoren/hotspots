@@ -100,12 +100,12 @@
   </div>
   {% comment %} Volcano list setting: framework items, newest first, in whatever space the map leaves. The framework's
      overflow engine drops rows that don't fit and adds "and N more". Columns per screen size come from the
-     layout (list_cols_lg: TRMNL X; one fewer in portrait), sized to rows ~250 px wide. {% endcomment %}
+     layout as list_cols "md,md-portrait,lg,lg-portrait" (TRMNL OG, OG portrait, X, X portrait), sized to the
+     space the list gets in that layout and rows ~250 px wide. {% endcomment %}
   {% if show_list %}
   <div id="hs-list" class="hs-list">
-    {% assign cols_lg = list_cols_lg | default: 1 %}
-    {% assign cols_lg_portrait = cols_lg | minus: 1 | at_least: 1 %}
-    <div class="columns" data-overflow-max-cols="1" data-overflow-max-cols-lg="{{ cols_lg }}" data-overflow-max-cols-lg-portrait="{{ cols_lg_portrait }}" data-overflow-counter="true">
+    {% assign list_n = list_cols | default: "1,1,1,1" | split: "," %}
+    <div class="columns" data-overflow-max-cols="1" data-overflow-max-cols-md="{{ list_n[0] }}" data-overflow-max-cols-md-portrait="{{ list_n[1] }}" data-overflow-max-cols-lg="{{ list_n[2] }}" data-overflow-max-cols-lg-portrait="{{ list_n[3] }}" data-overflow-counter="true">
       <div class="column">
       {% assign hs_now = "now" | date: "%s" | plus: 0 %}
       {% assign by_age = markers | sort: "a" %}
