@@ -72,6 +72,14 @@ def test_about_field_has_categories():
     assert "\n  category: nature,environment\n" in about   # at most two, from trmnl.com/api/categories
 
 
+def test_closeup_volcano_list_shows_only_its_region(site):
+    body = preview.render(site, "full", "europe", labels=False, device="v2", show_list=True).split("</style>", 1)[1]
+    assert 'id="hs-closeup" class="map grow basis--0' in body                 # map shares the space
+    assert body.count('<div class="item">') == 1 and ">Etna<" in body and ">Kilauea<" not in body
+    body = preview.render(site, "full", "europe", labels=False, device="v2").split("</style>", 1)[1]
+    assert '<div class="item">' not in body                                     # list off by default
+
+
 def test_unset_region_falls_back_to_europe_world(site):
     html = preview.render(site, "full", "", labels=False, device="og_png")
     assert 'data-map-slot="map-land" style="left: -4.167%;' in html
