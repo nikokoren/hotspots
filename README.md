@@ -115,6 +115,8 @@ python -m http.server   # open it over http://, so the framework JS, fonts and m
   screen). Close-ups list only that region's volcanoes: in a strip beside the map in full screen and
   half-horizontal, below it in portrait and in the narrow layouts.
 
+- **Title bar:** toggle, off by default; shows the Hotspots logo and name under the map.
+
 ## Data sources and attribution
 
 - NASA FIRMS: VIIRS S-NPP NRT active fire / thermal anomaly data (LANCE). https://firms.modaps.eosdis.nasa.gov/
