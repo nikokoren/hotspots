@@ -310,8 +310,10 @@
             var y = Math.max(-Math.PI + half, Math.min(Math.PI - half, (my(65) + my(-55)) / 2));
             center = [o.lon, (2 * Math.atan(Math.exp(y)) - Math.PI / 2) * 180 / Math.PI];
           }
+          // Outline preset without the map's own place names: they collided with our volcano
+          // labels and some scripts draw as empty boxes. Only volcano names are drawn.
           var opts = TRMNLMaps.options({
-            el: el, preset: "outline", tiles: "trmnl",
+            el: el, preset: "outline", tiles: "trmnl", labels: false,
             center: center || [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2], zoom: bbox ? 3 : zoom
           });
           opts.renderWorldCopies = true;

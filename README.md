@@ -34,8 +34,9 @@ white land and a dark water dither on 1-bit, greys on 4-bit, theme and dark-mode
   from Natural Earth by `backend/scripts/build_world_map.py` (2048×1024, 1-bit, embedded in
   `trmnl/src/shared.liquid`; source PNG in `trmnl/assets/world.png`). Markers are positioned in Liquid.
 - **Close-ups** use the TRMNL framework map ([`TRMNLMaps`](https://trmnl.com/framework/docs/3.4/map):
-  MapLibre over TRMNL's OpenStreetMap tiles), its `outline` preset unmodified (coast, water, borders,
-  main roads and big place names where the zoom allows), with markers projected in the browser.
+  MapLibre over TRMNL's OpenStreetMap tiles), its `outline` preset (coast, water, borders and main
+  roads) with the map's own place names turned off so only volcano names are drawn, with markers projected in
+  the browser.
 
 Both render natively on every TRMNL panel (1-bit to 16 greys, OG to X).
 
