@@ -101,7 +101,8 @@ def test_world_and_closeup_use_the_native_map_colours():
     assert 'data-map-slot="map-water"' in shared and 'data-map-slot="map-land"' in shared   # world
     assert "TRMNLMaps.applySwatches" in shared
     assert 'preset: "outline"' in shared and "l.paint =" not in shared   # close-up: preset paint kept
-    assert "style.layers.filter" not in shared and "labels: false" not in shared  # preset unmodified
+    assert "style.layers.filter" not in shared                                    # preset paint unmodified
+    assert 'preset: "outline", tiles: "trmnl", labels: false,' in shared        # no place names under our labels
     assert "bg--gray-70" not in shared
 
 
