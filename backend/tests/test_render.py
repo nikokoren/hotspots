@@ -72,3 +72,11 @@ def test_shade_classes():
     assert shade_class(0, SHADES) == "bg--black"
     assert shade_class(1, SHADES) == "bg--gray-20"
     assert shade_class(4, SHADES) == "bg--gray-50"
+
+
+def test_closeup_contains_handles_antimeridian():
+    from hotspots.render.views import contains
+    swp = VIEWS_BY_KEY["southwest-pacific"]                   # 140..190 E
+    assert contains(swp, -175.4, -15.6)                        # Tonga, west of 180 as -175
+    assert contains(swp, 151.0, -5.0) and not contains(swp, 100.0, -5.0)
+    assert not contains(VIEWS_BY_KEY["europe"], 15.0, 10.0)    # latitude outside the box

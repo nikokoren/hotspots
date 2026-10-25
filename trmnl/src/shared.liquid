@@ -79,34 +79,8 @@
       </div>
     {% endfor %}
   </div>
-  {% comment %} Volcano list setting: framework items, newest first, in whatever space the map leaves. The framework's
-     overflow engine drops rows that don't fit and adds "and N more". Columns per screen size come from the
-     layout as list_cols "md,md-portrait,lg,lg-portrait" (TRMNL OG, OG portrait, X, X portrait), sized to the
-     space the list gets in that layout and rows ~250 px wide. {% endcomment %}
   {% if show_list %}
-  <div id="hs-list" class="hs-list grow basis--0 w--full h--full">
-    {% assign list_n = list_cols | default: "1,1,1,1" | split: "," %}
-    <div class="columns" data-overflow-max-cols="1" data-overflow-max-cols-md="{{ list_n[0] }}" data-overflow-max-cols-md-portrait="{{ list_n[1] }}" data-overflow-max-cols-lg="{{ list_n[2] }}" data-overflow-max-cols-lg-portrait="{{ list_n[3] }}" data-overflow-counter="true">
-      <div class="column">
-      {% assign hs_now = "now" | date: "%s" | plus: 0 %}
-      {% assign by_age = markers | sort: "a" %}
-      {% for m in by_age %}
-        {% assign age_h = hs_now | minus: m.s | divided_by: 3600 %}
-        <div class="item">
-          <div class="icon"><span class="hs-logo w--9 hs-v--{{ m.k }}"><i class="hs-halo bg--white"></i><i class="{{ m.c }}"></i></span></div>
-          <div class="content">
-            <span class="title title--small">{{ m.n }}</span>
-            <div class="flex flex--nowrap gap--small">
-              {% if m.k == "erupt" %}<span class="label label--small label--filled no-shrink">erupting</span>{% else %}<span class="label label--small label--outline no-shrink">heat only</span>{% endif %}
-              <span class="label label--small label--underline no-shrink">{% if age_h < 1 %}&lt;1 h{% elsif age_h < 48 %}{{ age_h }} h{% else %}{{ age_h | divided_by: 24 }} d{% endif %} ago</span>
-              {% if m.co != "" %}<span class="description">{{ m.co }}</span>{% endif %}
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-      </div>
-    </div>
-  </div>
+  {% render 'volcano_list', markers: markers, list_cols: list_cols %}
   {% endif %}
 </div>
 <script type="text/javascript">
@@ -334,11 +308,65 @@
   })();
 </script>
 {% endtemplate %}
+{% template volcano_list %}
+{% comment %} Volcano list setting: framework items, newest first (only names, if given: a close-up's region).
+   The framework's overflow engine drops rows that don't fit and adds "and N more". Columns per screen
+   size come from the layout as list_cols "md,md-portrait,lg,lg-portrait" (TRMNL OG, OG portrait, X,
+   X portrait), sized to the space the list gets in that layout and rows ~250 px wide. {% endcomment %}
+<div id="hs-list" class="hs-list {{ list_class | default: "grow basis--0 w--full h--full" }}">
+  {% assign list_n = list_cols | default: "1,1,1,1" | split: "," %}
+  <div class="columns" data-overflow-max-cols="1" data-overflow-max-cols-md="{{ list_n[0] }}" data-overflow-max-cols-md-portrait="{{ list_n[1] }}" data-overflow-max-cols-lg="{{ list_n[2] }}" data-overflow-max-cols-lg-portrait="{{ list_n[3] }}" data-overflow-counter="true">
+    <div class="column">
+    {% if names and names.size == 0 %}<span class="description">No recent heat at volcanoes in this region.</span>{% endif %}
+    {% assign hs_now = "now" | date: "%s" | plus: 0 %}
+    {% assign by_age = markers | sort: "a" %}
+    {% for m in by_age %}
+      {% if names == nil or names contains m.n %}
+      {% assign age_h = hs_now | minus: m.s | divided_by: 3600 %}
+      <div class="item">
+        <div class="icon"><span class="hs-logo w--9 hs-v--{{ m.k }}"><i class="hs-halo bg--white"></i><i class="{{ m.c }}"></i></span></div>
+        <div class="content">
+          <span class="title title--small">{{ m.n }}</span>
+          <div class="flex flex--nowrap gap--small">
+            {% if m.k == "erupt" %}<span class="label label--small label--filled no-shrink">erupting</span>{% else %}<span class="label label--small label--outline no-shrink">heat only</span>{% endif %}
+            <span class="label label--small label--underline no-shrink">{% if age_h < 1 %}&lt;1 h{% elsif age_h < 48 %}{{ age_h }} h{% else %}{{ age_h | divided_by: 24 }} d{% endif %} ago</span>
+            {% if m.co != "" %}<span class="description">{{ m.co }}</span>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+    </div>
+  </div>
+</div>
+{% endtemplate %}
 {% template volcano_closeup %}
 {% render 'volcano_mapjs' %}
+{% comment %} With the volcano list, the map and the list of the region's volcanoes share the space. In wide
+   layouts (full screen, half-horizontal) the list is a one-column strip beside the map, so the region keeps
+   most of the room and its zoom; in portrait, and in narrow layouts, the list goes below the map. {% endcomment %}
+{% if show_list %}
+{% if list_side or closeup_side %}
+  {% assign hs_c = list_cols | default: "1,1,1,1" | split: "," %}
+  {% assign hs_cols = "1," | append: hs_c[1] | append: ",1," | append: hs_c[3] %}
+  {% assign hs_cw = "flex flex--row portrait:flex--col" %}
+  {% assign hs_lc = "no-shrink w--72 h--full portrait:grow portrait:basis--0 portrait:w--full" %}
+{% else %}
+  {% assign hs_cols = list_cols %}
+  {% assign hs_cw = "flex flex--col" %}
+  {% assign hs_lc = nil %}
+{% endif %}
+<div class="{{ hs_cw }} flex--top gap--small w--full h--full">
+  <div id="hs-closeup" class="map grow basis--0 w--full h--full rounded--base">
+    <span class="map__fallback title">Map unavailable on this screen</span>
+  </div>
+  {% render 'volcano_list', markers: markers, names: view.names, list_cols: hs_cols, list_class: hs_lc %}
+</div>
+{% else %}
 <div id="hs-closeup" class="map stretch w--full rounded--base">
   <span class="map__fallback title">Map unavailable on this screen</span>
 </div>
+{% endif %}
 <script type="text/javascript">
   HSMap.start("hs-closeup", {
     bbox: {{ view.bbox | json }}, markers: {{ markers | json }}, showLabels: {{ show_labels | json }},

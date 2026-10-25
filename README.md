@@ -110,8 +110,10 @@ python -m http.server   # open it over http://, so the framework JS, fonts and m
     Central America & Caribbean, South America, Japan, Kurils & Kamchatka, Indonesia & Philippines,
     Melanesia, Tonga & New Zealand: one region only.
 - **Labels:** toggle, off by default; on names up to 5 of the most recently observed volcanoes.
-- **Volcano list:** toggle, off by default; world views only. Lists the volcanoes, newest first, in the
-  space beside or below the map (as many rows as fit; none on the original TRMNL in full screen).
+- **Volcano list:** toggle, off by default. Lists the volcanoes, newest first, beside or below the map, as
+  many rows as fit. World views use the space the 2:1 map leaves (none on the original TRMNL in full
+  screen). Close-ups list only that region's volcanoes: in a strip beside the map in full screen and
+  half-horizontal, below it in portrait and in the narrow layouts.
 
 ## Data sources and attribution
 

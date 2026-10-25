@@ -44,5 +44,5 @@ custom_fields:
 - keyname: list
   field_type: boolean
   name: Volcano list
-  description: World views only. List the volcanoes, newest first, beside or below the map.
+  description: List the volcanoes, newest first, beside or below the map (on close-ups, only that region's).
   default: false

@@ -1,12 +1,12 @@
 """Map views and their projection.
 
 * World views show the whole globe re-centred on a meridian, as a 2:1
-  equirectangular frame. The recipe draws them with a 1200x600 world image
-  (currently a placeholder from the TRMNL community earthquake recipe), tiled
-  twice and shifted (see world_shift_pct); marker positions are computed here.
+  equirectangular frame. The recipe draws them with our Natural Earth land mask,
+  tiled twice and shifted (see world_shift_pct); marker positions are computed here.
 * Close-up views are drawn by the TRMNL framework map (TRMNLMaps / MapLibre,
   Web Mercator, OpenStreetMap tiles). Only their bounding box is defined here;
-  the recipe fits the map to it and projects the markers in the browser.
+  the recipe fits the map to it and projects the markers in the browser. The names
+  of the markers inside the box feed the recipe's volcano list.
 """
 
 from __future__ import annotations
@@ -60,6 +60,11 @@ def world_shift_pct(view: View) -> float:
     view's centre meridian sits in the middle. The recipe draws two copies side by side."""
     centre = (view.lon_min + view.lon_max) / 2
     return round(((centre + 180) / 360 - 0.5) % 1.0 * 100, 3)
+
+
+def contains(view: View, lon: float, lat: float) -> bool:
+    """Whether a point lies in a close-up's box (its longitudes may run past 180°)."""
+    return view.lat_min <= lat <= view.lat_max and (lon - view.lon_min) % 360 <= view.lon_max - view.lon_min
 
 
 def wrap180(lon: float) -> float:

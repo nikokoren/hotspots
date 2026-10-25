@@ -24,7 +24,7 @@ from hotspots.processing.association import associate
 from hotspots.processing.scoring import aggregate
 from hotspots.processing.visual import build_markers, qualify
 from hotspots.render.layout import marker_list, view_markers
-from hotspots.render.views import DEFAULT_VIEW, VIEWS, world_shift_pct
+from hotspots.render.views import DEFAULT_VIEW, VIEWS, contains, world_shift_pct
 from hotspots.sources import firms, gvp, manual
 
 ATTRIBUTION = ("Thermal anomalies: NASA FIRMS VIIRS (LANCE). Volcanoes: Smithsonian Global Volcanism Program. "
@@ -146,7 +146,9 @@ def write_site(out_dir: Path, cfg: dict, markers: list[Marker], activities: list
                                "markers": world_markers}
         else:
             views[view.key] = {"label": view.label, "world": False,
-                               "bbox": [view.lon_min, view.lat_min, view.lon_max, view.lat_max]}
+                               "bbox": [view.lon_min, view.lat_min, view.lon_max, view.lat_max],
+                               "names": [m.name for m in markers[:vis["max_markers"]]
+                                         if contains(view, m.lon, m.lat)]}
 
     latest = {
         "generated_at": as_of.isoformat(timespec="seconds"),
