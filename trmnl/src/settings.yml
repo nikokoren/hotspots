@@ -46,3 +46,8 @@ custom_fields:
   name: Volcano list
   description: List the volcanoes, newest first, beside or below the map (on close-ups, only that region's).
   default: false
+- keyname: title_bar
+  field_type: boolean
+  name: Title bar
+  description: Show the Hotspots title bar under the map.
+  default: false

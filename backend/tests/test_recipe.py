@@ -80,6 +80,12 @@ def test_closeup_volcano_list_shows_only_its_region(site):
     assert '<div class="item">' not in body                                     # list off by default
 
 
+def test_title_bar_setting_off_by_default(site):
+    assert 'class="title_bar"' not in preview.render(site, "full", "world-europe", labels=False, device="og_png")
+    assert 'class="title_bar"' in preview.render(site, "full", "world-europe", labels=False, device="og_png",
+                                                 title_bar=True)
+
+
 def test_unset_region_falls_back_to_europe_world(site):
     html = preview.render(site, "full", "", labels=False, device="og_png")
     assert 'data-map-slot="map-land" style="left: -4.167%;' in html

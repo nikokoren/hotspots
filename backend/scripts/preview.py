@@ -35,7 +35,8 @@ MAX_PAYLOAD_KB = 100  # TRMNL's merge-variable limit
 
 
 def render(site: Path, layout: str, region: str, labels: bool, device: str,
-           css: str = CSS, js: str = JS, site_url: str | None = None, show_list: bool = False) -> str:
+           css: str = CSS, js: str = JS, site_url: str | None = None, show_list: bool = False,
+           title_bar: bool = False) -> str:
     shared = (SRC / "shared.liquid").read_text()
     partials = {name: body for name, body in TEMPLATE_BLOCK.findall(shared)}
     markup = TEMPLATE_BLOCK.sub("", shared) + (SRC / f"{layout}.liquid").read_text()
@@ -45,7 +46,7 @@ def render(site: Path, layout: str, region: str, labels: bool, device: str,
     if size_kb > MAX_PAYLOAD_KB:
         print(f"warning: payload {size_kb:.1f} KB exceeds TRMNL's {MAX_PAYLOAD_KB} KB limit", file=sys.stderr)
     payload["site_url"] = site_url or site.resolve().as_uri()
-    values = {"labels": labels, "list": show_list}
+    values = {"labels": labels, "list": show_list, "title_bar": title_bar}
     if region:
         values["region"] = region
     payload["trmnl"] = {"plugin_settings": {"custom_fields_values": values}}
@@ -71,12 +72,13 @@ def main() -> None:
     ap.add_argument("--region", default="world-europe")
     ap.add_argument("--labels", action="store_true")
     ap.add_argument("--list", action="store_true", help="volcano list setting on")
+    ap.add_argument("--title", action="store_true", help="title bar setting on")
     ap.add_argument("--device", default="og_png", choices=list(DEVICES))
     ap.add_argument("--css", default=CSS)
     ap.add_argument("--js", default=JS)
     args = ap.parse_args()
     print(render(args.site, args.layout, args.region, args.labels, args.device, args.css, args.js,
-                 show_list=args.list))
+                 show_list=args.list, title_bar=args.title))
 
 
 if __name__ == "__main__":
