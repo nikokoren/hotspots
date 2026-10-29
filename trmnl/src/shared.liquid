@@ -339,6 +339,27 @@
     </div>
   </div>
 </div>
+<script type="text/javascript">
+  // When not even one row fits (e.g. the original TRMNL in full screen with the title bar), hide the
+  // framework's lone "and N more" too. Checked after its overflow pass and again on screen changes.
+  (function () {
+    var tries = 0;
+    function check() {
+      var list = document.getElementById("hs-list");
+      if (!list) return;
+      var shown = Array.prototype.some.call(list.querySelectorAll(".item"), function (i) {
+        return i.querySelector(".content") && window.getComputedStyle(i).display !== "none";
+      });
+      list.style.visibility = shown || {{ names.size | default: 1 }} === 0 ? "" : "hidden";
+    }
+    (function wait() {
+      if (!window.TRMNL_PLUGINS_READY && ++tries <= 100) return setTimeout(wait, 50);
+      setTimeout(check, 0);
+      var list = document.getElementById("hs-list");
+      if (list && window.TRMNLPaint) TRMNLPaint.watch(list, function () { setTimeout(check, 100); }, { immediate: false });
+    })();
+  })();
+</script>
 {% endtemplate %}
 {% template volcano_closeup %}
 {% render 'volcano_mapjs' %}
