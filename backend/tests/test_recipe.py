@@ -86,6 +86,13 @@ def test_title_bar_setting_off_by_default(site):
                                                  title_bar=True)
 
 
+def test_full_screen_list_left_out_on_og_landscape_with_title_bar(site):
+    on = preview.render(site, "full", "world-europe", labels=False, device="og_png", show_list=True, title_bar=True)
+    off = preview.render(site, "full", "world-europe", labels=False, device="og_png", show_list=True)
+    assert "md:landscape:hidden lg:landscape:block" in on and "md:landscape:hidden" not in off
+    assert "TRMNL_PLUGINS_READY && ++tries <= 100) return setTimeout(wait, 50);\n      setTimeout(check" not in on
+
+
 def test_unset_region_falls_back_to_europe_world(site):
     html = preview.render(site, "full", "", labels=False, device="og_png")
     assert 'data-map-slot="map-land" style="left: -4.167%;' in html
