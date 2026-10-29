@@ -2,7 +2,10 @@
   {% if hs_view == nil %}
     <span class="title">Volcano data unavailable</span>
   {% elsif hs_view.world %}
-    {% render 'volcano_world', view: hs_view, markers: markers, show_labels: hs_labels, show_list: hs_list, list_cols: "3,2,4,3", max_labels: max_labels, map_scale: 1 %}
+    {% comment %} With the title bar, no list row fits under the world map on the original TRMNL in landscape:
+       leave the list out there rather than show a lone "and N more". {% endcomment %}
+    {% if hs_title %}{% assign hs_lx = "md:landscape:hidden lg:landscape:block" %}{% endif %}
+    {% render 'volcano_world', view: hs_view, markers: markers, show_labels: hs_labels, show_list: hs_list, list_extra: hs_lx, list_cols: "3,2,4,3", max_labels: max_labels, map_scale: 1 %}
   {% else %}
     {% render 'volcano_closeup', view: hs_view, markers: markers, show_labels: hs_labels, show_list: hs_list, closeup_side: true, list_cols: "3,2,4,3", max_labels: max_labels, map_scale: 1 %}
   {% endif %}

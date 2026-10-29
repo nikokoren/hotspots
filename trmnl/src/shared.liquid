@@ -80,7 +80,7 @@
     {% endfor %}
   </div>
   {% if show_list %}
-  {% render 'volcano_list', markers: markers, list_cols: list_cols %}
+  {% render 'volcano_list', markers: markers, list_cols: list_cols, list_extra: list_extra %}
   {% endif %}
 </div>
 <script type="text/javascript">
@@ -313,7 +313,7 @@
    The framework's overflow engine drops rows that don't fit and adds "and N more". Columns per screen
    size come from the layout as list_cols "md,md-portrait,lg,lg-portrait" (TRMNL OG, OG portrait, X,
    X portrait), sized to the space the list gets in that layout and rows ~250 px wide. {% endcomment %}
-<div id="hs-list" class="hs-list {{ list_class | default: "grow basis--0 w--full h--full" }}">
+<div id="hs-list" class="hs-list {{ list_class | default: "grow basis--0 w--full h--full" }} {{ list_extra }}">
   {% assign list_n = list_cols | default: "1,1,1,1" | split: "," %}
   <div class="columns" data-overflow-max-cols="1" data-overflow-max-cols-md="{{ list_n[0] }}" data-overflow-max-cols-md-portrait="{{ list_n[1] }}" data-overflow-max-cols-lg="{{ list_n[2] }}" data-overflow-max-cols-lg-portrait="{{ list_n[3] }}" data-overflow-counter="true">
     <div class="column">
@@ -339,27 +339,6 @@
     </div>
   </div>
 </div>
-<script type="text/javascript">
-  // When not even one row fits (e.g. the original TRMNL in full screen with the title bar), hide the
-  // framework's lone "and N more" too. Checked after its overflow pass and again on screen changes.
-  (function () {
-    var tries = 0;
-    function check() {
-      var list = document.getElementById("hs-list");
-      if (!list) return;
-      var shown = Array.prototype.some.call(list.querySelectorAll(".item"), function (i) {
-        return i.querySelector(".content") && window.getComputedStyle(i).display !== "none";
-      });
-      list.style.visibility = shown || {{ names.size | default: 1 }} === 0 ? "" : "hidden";
-    }
-    (function wait() {
-      if (!window.TRMNL_PLUGINS_READY && ++tries <= 100) return setTimeout(wait, 50);
-      setTimeout(check, 0);
-      var list = document.getElementById("hs-list");
-      if (list && window.TRMNLPaint) TRMNLPaint.watch(list, function () { setTimeout(check, 100); }, { immediate: false });
-    })();
-  })();
-</script>
 {% endtemplate %}
 {% template volcano_closeup %}
 {% render 'volcano_mapjs' %}
