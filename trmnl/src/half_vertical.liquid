@@ -1,6 +1,9 @@
 <div class="layout">
   {% if hs_view == nil %}
-    <span class="title">Volcano data unavailable</span>
+    <div class="flex flex--col gap--small text--center">
+      <span class="title">The lava feed has cooled off</span>
+      <span class="description">No volcano data right now. It should flow again after the next daily update.</span>
+    </div>
   {% elsif hs_view.world %}
     {% render 'volcano_world', view: hs_view, markers: markers, show_labels: hs_labels, show_list: hs_list, list_cols: "1,1,2,1", max_labels: max_labels, map_scale: 1.5 %}
   {% else %}

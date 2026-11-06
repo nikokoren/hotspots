@@ -1,0 +1,49 @@
+name: Eruptions list reminder
+
+# eruptions.txt is pasted by hand from the weekly GVP/USGS report (published
+# Thursdays) and stops counting 14 days after its last commit. Every Friday this
+# opens an issue (GitHub emails the owner) if the file is 5+ days old; updating
+# the file closes it.
+
+on:
+  schedule:
+    - cron: "13 8 * * 5"   # Fridays, after the Thursday report
+  push:
+    branches: [main]
+    paths: ["eruptions.txt"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      LABEL: eruptions-reminder
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the file's last commit date is its age
+      - name: Open or close the reminder
+        run: |
+          gh label create "$LABEL" --color F9D0C4 --description "Weekly eruptions.txt update" --force
+          open=$(gh issue list --label "$LABEL" --state open --json number --jq '.[].number')
+          if [ "${{ github.event_name }}" = "push" ]; then
+            for n in $open; do gh issue close "$n" --comment "eruptions.txt updated in ${{ github.sha }}."; done
+            exit 0
+          fi
+          age_days=$(( ( $(date +%s) - $(git log -1 --format=%ct -- eruptions.txt) ) / 86400 ))
+          echo "eruptions.txt is $age_days days old"
+          if [ "$age_days" -ge 5 ] && [ -z "$open" ]; then
+            gh issue create --label "$LABEL" \
+              --title "Paste this week's volcanic activity report into eruptions.txt" \
+              --body "@${{ github.repository_owner }} eruptions.txt is $age_days days old. It stops counting at 14 days, after which every icon shows lava.
+
+          1. Open the weekly report: https://volcano.si.edu/reports_weekly.cfm
+          2. Edit [eruptions.txt](../blob/main/eruptions.txt) and paste the table (header row included) below the comments.
+          3. Commit. The map republishes, and this issue closes itself."
+          fi

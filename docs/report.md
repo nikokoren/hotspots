@@ -20,7 +20,7 @@
 
 | Source | Endpoint | Credential |
 |---|---|---|
-| FIRMS (default) | `https://firms.modaps.eosdis.nasa.gov/data/active_fire/suomi-npp-viirs-c2/csv/SUOMI_VIIRS_C2_Global_7d.csv` (~37 MB) | none |
+| FIRMS (default) | `https://firms.modaps.eosdis.nasa.gov/data/active_fire/noaa-20-viirs-c2/csv/J1_VIIRS_C2_Global_7d.csv`, falling back to the NOAA-21 (`J2_…`) and S-NPP (`SUOMI_…`) files when stale (~37 MB each) | none |
 | FIRMS (optional) | Area API `…/api/area/csv/{MAP_KEY}/VIIRS_SNPP_NRT/world/{days}` | `FIRMS_MAP_KEY` repo secret, used only if set |
 | GVP catalogue | WFS `GVP-VOTW:Smithsonian_VOTW_Holocene_Volcanoes`, GeoJSON | none |
 | GVP eruptions | WFS `GVP-VOTW:E3WebApp_Eruptions1960`, `ContinuingEruption = True` and `EndDate` (latest recorded activity) within 90 days. If it fails, all markers fall back to the lava icon | none |
@@ -98,12 +98,12 @@ These include the known long-running eruptions (Kilauea, Sangay, Ibu, Lewotolok,
 - **Fires on active volcanoes** (for example Tengger's caldera grassland) can still pass.
 - **Weak or cloud-covered activity is missed.** Absence of a marker does not mean inactivity.
 - **Dense clusters** (Java, Lesser Sunda Islands) overlap on world views. Regional views separate them.
-- **One satellite only.** S-NPP is aging. NOAA-20/21 are configured as alternatives but not merged.
+- **One satellite per run.** NOAA-20 is the main source, with NOAA-21 and then S-NPP as automatic fallbacks when a satellite's newest detection is more than 24 h old (S-NPP stopped delivering on 2 November 2026, which emptied the map until the switch). Satellites are never mixed in one run. Thresholds were calibrated on S-NPP; NOAA-20 carries the same VIIRS instrument, and its first live run gave 21 markers.
 - **Not yet checked with trmnlp or on a device.** Templates were rendered with a python-liquid stand-in and TRMNL's real framework CSS/JS in headless Chromium for OG (1-bit), OG Plus (2-bit) and X (4-bit), in all four layouts.
 - **World views on TRMNL X** use the framework map (Web Mercator) in every layout: full screen hides ~10% of the longitudes at the map edges, half-vertical shows only about half of them, half-horizontal crops latitudes to roughly 55°N–40°S, and polar regions are enlarged. The choice follows the framework's `screen--lg` class (CSS), not a measurement. Other devices, and every device with the *Volcano list* setting on, use the 2:1 map; the list fills the space it leaves.
 - **"Seen … ago" in the volcano list** is computed when the screen renders, but icon shades are computed by the daily run, so a shade can be up to a day behind the list.
 - **Close-up zoom is whole-number only** (the framework keeps dither on the pixel grid), so a region shows either somewhat more or up to ~20% less than its box, depending on the screen size.
-- **Close-ups need WebGL** in TRMNL's renderer; without it the framework shows the "Map unavailable" fallback.
+- **Close-ups need WebGL** in TRMNL's renderer; without it the framework shows the recipe's "map unavailable" fallback text.
 - **Two Hotspots close-ups in one mashup** would share an element id; not supported yet.
 
 ## Recommended adjustments
@@ -111,5 +111,5 @@ These include the known long-running eruptions (Kilauea, Sangay, Ibu, Lewotolok,
 1. Re-run the calibration sweep weekly for a month, especially during other fire seasons (Australia, the Americas), before locking thresholds.
 2. Check marker legibility and the grey steps on a physical OG panel; adjust `shades` / icon sizes if needed.
 3. Consider an "unconfirmed" tier for strong, compact, repeated signals at dormant volcanoes (for example ≥ 3 passes within 2 km), drawn distinctly, so reawakenings aren't completely hidden.
-4. Add NOAA-20 as an automatic fallback when S-NPP data is missing.
+4. Re-run the calibration sweep on NOAA-20 data to confirm the S-NPP thresholds carry over.
 5. Add portrait-aspect views for the half-vertical layout and TRMNL X portrait orientation.
