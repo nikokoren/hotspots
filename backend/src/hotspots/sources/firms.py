@@ -10,13 +10,20 @@ Two equivalent access paths to the same NRT product:
 The public 7-day file is the default: it covers the 72 h window in one request
 and needs no credential. If a MAP_KEY is configured the API is used instead; the
 key never leaves this process (see http.redact).
+
+Three satellites carry the same VIIRS instrument: NOAA-20 (main), NOAA-21 and
+S-NPP. fetch_freshest() uses the first whose newest detection is recent enough,
+so a satellite that stops delivering (S-NPP did in November 2026) is skipped
+automatically. One satellite per run, never mixed, so sizes and fading stay
+comparable.
 """
 
 from __future__ import annotations
 
 import csv
 import io
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from typing import Callable
 
 from hotspots import http
 from hotspots.models import Detection, SourceResult
@@ -44,6 +51,39 @@ def fetch(product: str, span: str = "7d", map_key: str | None = None, days: int 
         return SourceResult(ok=False, fetched_at=now, error=str(exc), meta={"url": http.redact(url)})
     return SourceResult(ok=True, fetched_at=now, items=detections,
                         meta={"url": http.redact(url), "rows_skipped": skipped, "product": product})
+
+
+def fetch_freshest(products: list[str], as_of: datetime, max_age_hours: float,
+                   fetch_fn: Callable[..., SourceResult] | None = None, log=print,
+                   **kwargs) -> SourceResult:
+    """The first product whose newest detection is within max_age_hours of as_of.
+
+    If none is that fresh, the one with the newest data (stale, logged); if every
+    fetch fails, the last failure.
+    """
+    fetch_fn = fetch_fn or fetch
+    best: SourceResult | None = None
+    best_newest: datetime | None = None
+    last_failure: SourceResult | None = None
+    for product in products:
+        result = fetch_fn(product, **kwargs)
+        if not result.ok:
+            log(f"FIRMS {product}: fetch failed ({result.error}); trying the next satellite")
+            last_failure = result
+            continue
+        newest = max((d.acquired_at for d in result.items), default=None)
+        if newest is not None and as_of - newest <= timedelta(hours=max_age_hours):
+            result.meta = {**result.meta, "newest": newest.isoformat(), "tried": products[:products.index(product) + 1]}
+            return result
+        log(f"FIRMS {product}: newest detection {newest or 'none'} is older than {max_age_hours} h; "
+            "trying the next satellite")
+        if newest is not None and (best_newest is None or newest > best_newest):
+            best, best_newest = result, newest
+    if best is not None:
+        log(f"FIRMS: no satellite is fresh; using {best.meta.get('product')} (newest {best_newest})")
+        best.meta = {**best.meta, "newest": best_newest.isoformat(), "stale": True, "tried": list(products)}
+        return best
+    return last_failure or SourceResult(ok=False, fetched_at=as_of, error="no FIRMS product delivered data")
 
 
 def parse_csv(text: str) -> tuple[list[Detection], int]:

@@ -1,6 +1,9 @@
 <div class="layout">
   {% if hs_view == nil %}
-    <span class="title">Volcano data unavailable</span>
+    <div class="flex flex--col gap--small">
+      <span class="title">The lava feed has cooled off</span>
+      <span class="description">No volcano data right now. It should flow again after the next daily update.</span>
+    </div>
   {% elsif hs_view.world %}
     {% comment %} With the title bar, no list row fits under the world map on the original TRMNL in landscape:
        leave the list out there rather than show a lone "and N more". {% endcomment %}

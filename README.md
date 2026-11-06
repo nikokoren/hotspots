@@ -119,7 +119,8 @@ python -m http.server   # open it over http://, so the framework JS, fonts and m
 
 ## Data sources and attribution
 
-- NASA FIRMS: VIIRS S-NPP NRT active fire / thermal anomaly data (LANCE). https://firms.modaps.eosdis.nasa.gov/
+- NASA FIRMS: VIIRS NOAA-20 NRT active fire / thermal anomaly data (LANCE), with NOAA-21 and S-NPP as
+  automatic fallbacks. https://firms.modaps.eosdis.nasa.gov/
 - Global Volcanism Program, Smithsonian Institution: Volcanoes of the World database. https://volcano.si.edu/
 - Close-up maps: © OpenStreetMap contributors (ODbL), tiles and styling by the TRMNL framework.
 - World map: generated from Natural Earth land polygons, public domain. https://www.naturalearthdata.com/

@@ -39,3 +39,35 @@ def test_confidence_ranking():
 def test_map_key_is_redacted():
     url = firms.API_URL.format(key="SECRET123", product="VIIRS_SNPP_NRT", days=5)
     assert "SECRET123" not in http.redact(url)
+
+
+def _result(product, newest_hours_ago, ok=True):
+    from datetime import datetime, timedelta, timezone
+    from hotspots.models import Detection, SourceResult
+    now = datetime(2026, 11, 6, 12, tzinfo=timezone.utc)
+    items = [] if newest_hours_ago is None else [
+        Detection(lat=0, lon=0, acquired_at=now - timedelta(hours=newest_hours_ago), frp_mw=5.0, confidence="n",
+                  brightness_k=None)]
+    return SourceResult(ok=ok, fetched_at=now, items=items, error=None if ok else "boom", meta={"product": product})
+
+
+def test_fetch_freshest_skips_a_satellite_that_stopped_delivering():
+    from datetime import datetime, timezone
+    as_of = datetime(2026, 11, 6, 12, tzinfo=timezone.utc)
+    ages = {"VIIRS_NOAA20_NRT": 80, "VIIRS_NOAA21_NRT": 3, "VIIRS_SNPP_NRT": None}
+    calls = []
+    def fake(product, **kw):
+        calls.append(product)
+        return _result(product, ages[product])
+    out = firms.fetch_freshest(list(ages), as_of, 24, fetch_fn=fake, log=lambda m: None)
+    assert out.meta["product"] == "VIIRS_NOAA21_NRT" and calls == ["VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT"]
+
+
+def test_fetch_freshest_falls_back_to_newest_stale_data_or_failure():
+    from datetime import datetime, timezone
+    as_of = datetime(2026, 11, 6, 12, tzinfo=timezone.utc)
+    stale = {"A": 50, "B": 30}
+    out = firms.fetch_freshest(list(stale), as_of, 24, fetch_fn=lambda p, **kw: _result(p, stale[p]), log=lambda m: None)
+    assert out.ok and out.meta["product"] == "B" and out.meta["stale"]
+    out = firms.fetch_freshest(["A"], as_of, 24, fetch_fn=lambda p, **kw: _result(p, 1, ok=False), log=lambda m: None)
+    assert not out.ok

@@ -2,7 +2,11 @@
 # real data (see docs/report.md) and should be revisited as more data accrues.
 
 [firms]
-product = "VIIRS_SNPP_NRT"     # VIIRS_NOAA20_NRT / VIIRS_NOAA21_NRT are fallbacks; never mixed
+# Satellites in order of preference (same VIIRS instrument); one per run, never mixed.
+# The first whose newest detection is within max_data_age_hours is used. S-NPP (2011)
+# stopped delivering in November 2026, so NOAA-20 leads.
+products = ["VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT", "VIIRS_SNPP_NRT"]
+max_data_age_hours = 24
 span = "7d"                    # public file span: 24h | 48h | 7d (no key needed)
 api_days = 5                   # only used when FIRMS_MAP_KEY is set (Area API)
 min_confidence = "nominal"     # VIIRS confidence: low | nominal | high

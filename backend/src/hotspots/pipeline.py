@@ -90,15 +90,17 @@ def run(cfg: dict, out_dir: Path, cache_dir: Path, *, map_key: str | None = None
 
     if firms_csv:
         detections, skipped = firms.parse_csv(firms_csv.read_text())
-        firms_meta = {"url": str(firms_csv), "rows_skipped": skipped, "product": f["product"]}
+        firms_meta = {"url": str(firms_csv), "rows_skipped": skipped, "product": f["products"][0]}
     else:
-        result = firms.fetch(f["product"], span=f["span"], map_key=map_key, days=f["api_days"],
-                             timeout_s=f["request_timeout_s"], retries=f["max_retries"])
+        result = firms.fetch_freshest(f["products"], as_of, f["max_data_age_hours"], log=log,
+                                      span=f["span"], map_key=map_key, days=f["api_days"],
+                                      timeout_s=f["request_timeout_s"], retries=f["max_retries"])
         if not result.ok:
             # Fail loudly: nothing is deployed, so the last good maps stay up unchanged.
             raise RuntimeError(f"FIRMS fetch failed: {result.error}")
         detections, firms_meta = result.items, result.meta
-    log(f"FIRMS: {len(detections)} detections ({firms_meta.get('rows_skipped', 0)} malformed rows skipped)")
+    log(f"FIRMS {firms_meta.get('product')}: {len(detections)} detections "
+        f"({firms_meta.get('rows_skipped', 0)} malformed rows skipped)")
 
     volcanoes, cat_meta = load_catalogue(cache_dir / "catalogue.json", previous_url,
                                          cfg["catalogue"]["refresh_days"], log=log)
