@@ -17,7 +17,8 @@ Markers come in two drawings (`trmnl/assets/icons/`, built into the template by 
   access, there is also a hand-maintained list: [`eruptions.txt`](eruptions.txt). Once a week, paste the volcano
   names from the [Weekly Volcanic Activity Report](https://volcano.si.edu/reports_weekly.cfm) and commit; the map
   republishes. A volcano on the list also gets the plume. The list is ignored once its last commit is more than
-  14 days old, and names that don't match the catalogue are listed in the Publish maps log.
+  14 days old, and names that don't match the catalogue are listed in the Publish maps log. Every Friday a
+  workflow opens a reminder issue (GitHub emails you) if the file is 5+ days old; updating it closes the issue.
 
 The eruption drawing is also the recipe icon.
 

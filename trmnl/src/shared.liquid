@@ -315,10 +315,17 @@
    X portrait), sized to the space the list gets in that layout and rows ~250 px wide. {% endcomment %}
 <div id="hs-list" class="hs-list {{ list_class | default: "grow basis--0 w--full h--full" }} {{ list_extra }}">
   {% assign list_n = list_cols | default: "1,1,1,1" | split: "," %}
+  {% assign hs_empty = false %}
+  {% if names and names.size == 0 %}{% assign hs_empty = "no recent heat at volcanoes in this region." %}
+  {% elsif names == nil and markers.size == 0 %}{% assign hs_empty = "no recent heat at any volcano." %}{% endif %}
+  {% if hs_empty %}
+  <div class="flex flex--col flex--center-y w--full h--full text--center">
+    <span class="title title--small">Dormant for now</span>
+    <span class="description">{{ hs_empty | capitalize }}</span>
+  </div>
+  {% else %}
   <div class="columns" data-overflow-max-cols="1" data-overflow-max-cols-md="{{ list_n[0] }}" data-overflow-max-cols-md-portrait="{{ list_n[1] }}" data-overflow-max-cols-lg="{{ list_n[2] }}" data-overflow-max-cols-lg-portrait="{{ list_n[3] }}" data-overflow-counter="true">
     <div class="column">
-    {% if names and names.size == 0 %}<span class="description">All quiet under the crust: no recent heat at volcanoes in this region.</span>
-    {% elsif names == nil and markers.size == 0 %}<span class="description">All quiet under the crust: no recent heat at any volcano.</span>{% endif %}
     {% assign hs_now = "now" | date: "%s" | plus: 0 %}
     {% assign by_age = markers | sort: "a" %}
     {% for m in by_age %}
@@ -339,6 +346,7 @@
     {% endfor %}
     </div>
   </div>
+  {% endif %}
 </div>
 {% endtemplate %}
 {% template volcano_closeup %}
