@@ -13,12 +13,12 @@ from hotspots.models import Marker
 from hotspots.render.views import Frame, View
 
 # Icon geometry, shared with the recipe (trmnl/src/shared.liquid) and build_icons.py:
-# both drawings sit on one 1345x1306 canvas (halo room included) so the cone lines up.
-ICON_ASPECT = 1345 / 1306                  # canvas width / height
-ICON_ANCHOR_Y = 0.683                      # the volcano's location: centre of the cone
+# both drawings sit on one 1445x1406 canvas (halo room included) so the cone lines up.
+ICON_ASPECT = 1445 / 1406                  # canvas width / height
+ICON_ANCHOR_Y = 0.670                      # the volcano's location: centre of the cone
 ICON_BOX = {                               # visible shape, fractions of the canvas
-    "lava": (0.052, 0.420, 0.948, 0.946),  # cone with lava channel: heat detected
-    "erupt": (0.052, 0.054, 0.948, 0.946),  # cone with plume: GVP continuing eruption
+    "lava": (0.083, 0.425, 0.917, 0.915),  # cone with lava channel: heat detected
+    "erupt": (0.083, 0.085, 0.917, 0.915),  # cone with plume: confirmed eruption
 }
 # Short country names for the recipe's volcano list (GVP spells countries out in full).
 COUNTRY_SHORT = {"United States": "USA", "Papua New Guinea": "PNG", "United Kingdom": "UK",

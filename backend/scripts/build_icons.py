@@ -20,8 +20,8 @@ REPO = Path(__file__).resolve().parents[2]
 ICONS = REPO / "trmnl" / "assets" / "icons"
 TEMPLATE = REPO / "trmnl" / "src" / "shared.liquid"
 CROP = "1205x1166+12+68"   # common frame of both drawings (plume included)
-PAD = 70                   # source px of room for the halo
-HALO = 45                  # halo radius, source px
+PAD = 120                  # source px of room for the halo
+HALO = 110                 # halo radius, source px (~2.5 px on a 30 px icon)
 SIZE = 128                 # output width, px
 
 
